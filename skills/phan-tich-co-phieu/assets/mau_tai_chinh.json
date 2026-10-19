@@ -1,0 +1,49 @@
+{
+  "_huong_dan": "Mẫu đầu vào cho scripts/dinh_gia.py. Tiền: TỶ ĐỒNG. Giá: ĐỒNG/cp (đã điều chỉnh theo sự kiện quyền). Số cổ phiếu: TRIỆU cp. Để null nếu không có số liệu; chỉ số cần trường đó sẽ hiện n/a. Số liệu dưới đây là ví dụ FPT tại 14/10/2026, tổng hợp từ thông cáo KQKD và báo cáo CTCK; trường có hậu tố _uoc_tinh trong _ghi_chu là ước tính.",
+  "_ghi_chu": {
+    "von_csh_me_hien_tai": "ước tính từ P/B và P/E TTM của TCBS (6/2026)",
+    "co_tuc_tien_da_tra": "ước tính = 2.000 đ/cp x số cp lưu hành từng năm",
+    "nam_2026": "FPT hạch toán FPT Telecom theo phương pháp vốn chủ sở hữu từ 2026; không trộn doanh thu 2026 với chuỗi cũ"
+  },
+  "ma": "FPT",
+  "nganh": "cong_nghe",
+  "san": "HOSE",
+  "gia_hien_tai": 57100,
+  "ngay_gia": "2026-10-14",
+  "so_cp_luu_hanh_trieu": 1885.8,
+  "lnst_ttm_me": 10147,
+  "von_csh_me_hien_tai": 39500,
+  "lai_suat_tpcp_10n": 0.041,
+  "chiet_khau": 0.12,
+  "bien_an_toan_mong_muon": 0.30,
+  "kich_ban": {
+    "bi_quan": {"g1": 0.07, "g2": 0.05, "pe_cuoi": 9, "chi_tra": 0.35, "trong_so": 0.25,
+                "ly_do": "AI làm giảm đơn giá gia công, tăng trưởng về mức doanh nghiệp bình thường"},
+    "co_so": {"g1": 0.13, "g2": 0.09, "pe_cuoi": 12, "chi_tra": 0.35, "trong_so": 0.5,
+              "ly_do": "Giữ tốc độ 8T/2026 (~13%) trong 5 năm, sau đó chậm lại"},
+    "lac_quan": {"g1": 0.16, "g2": 0.11, "pe_cuoi": 15, "chi_tra": 0.35, "trong_so": 0.25,
+                 "ly_do": "Hợp đồng ký mới +30% chuyển hóa thành doanh thu, AI là động lực mới"}
+  },
+  "kiem_dinh_giu_lai": {
+    "nam_bat_dau": 2021,
+    "von_hoa_dau_ky": 84400,
+    "cong_them_giu_lai": 5047,
+    "_ghi_chu": "cong_them_giu_lai = LNST mẹ 8T/2026 (6.761) - cổ tức tiền đã trả 2026 (1.714)"
+  },
+  "lich_su_gia_eps": [
+    {"ngay": "2025-01-23", "gia": 123300, "eps_ttm": 4162},
+    {"ngay": "2026-01-19", "gia": 95455, "eps_ttm": 4968},
+    {"ngay": "2026-10-14", "gia": 57100, "eps_ttm": 5381}
+  ],
+  "nam": {
+    "2018": {"doanh_thu": 23214, "lntt": 3857, "lnst_me": 2620},
+    "2019": {"doanh_thu": 27717, "lntt": 4665, "lnst_me": 3135},
+    "2020": {"doanh_thu": 29830, "lntt": 5261, "lnst_me": 3538},
+    "2021": {"doanh_thu": 35657, "lntt": 6337, "lnst_me": 4337},
+    "2022": {"doanh_thu": 44010, "lntt": 7661, "lnst_me": 5310, "co_tuc_tien_da_tra": 2000},
+    "2023": {"doanh_thu": 52618, "lntt": 9203, "lnst_me": 6470, "co_tuc_tien_da_tra": 2400},
+    "2024": {"doanh_thu": 62849, "lntt": 11071, "lnst": 9427, "lnst_me": 7849, "co_tuc_tien_da_tra": 2800},
+    "2025": {"doanh_thu": 70113, "lntt": 13039, "lnst_me": 9369, "co_tuc_tien_da_tra": 3200,
+             "tong_tai_san": 88142, "von_csh": 43748, "no_vay": 21000, "tien_va_dtnh": 40153}
+  }
+}

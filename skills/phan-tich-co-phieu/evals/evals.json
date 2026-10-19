@@ -1,0 +1,23 @@
+{
+  "skill_name": "phan-tich-co-phieu",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Phân tích MWG theo Buffett và nến Nhật giúp tôi. Tôi đang cầm 3.000 cp giá vốn 68.000, tổng vốn 800 triệu. Nên giữ, mua thêm hay bán?",
+      "expected_output": "Báo cáo kết luận trước: hai lăng kính có số liệu và nguồn, ma trận quyết định, trả lời câu hỏi giữ/mua/bán cho người đang nắm giữ (không neo giá vốn), kế hoạch đợt, cắt lỗ theo ATR và khối lượng theo 1% vốn, chỉ số bán lẻ (SSSG, số cửa hàng, Bách Hóa Xanh), nguồn và giới hạn dữ liệu.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "VCB có đáng mua lúc này không? Phân tích sâu giúp mình, mình định giữ 3 năm.",
+      "expected_output": "Dùng bộ chỉ số ngân hàng (NIM, nợ xấu, nợ nhóm 2, LLR, CASA, CAR, chi phí tín dụng) và định giá P/B – ROE, không dùng Altman/Beneish/FCF; giải mã kỳ vọng; dòng tiền ngoại (room 30%); kế hoạch cho tầm 3 năm.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Sao HPG giảm mạnh mấy tuần nay vậy, có phải do thị trường dự đoán gì không? Mình có file giá tải từ app CTCK đây.",
+      "expected_output": "Phân rã giá = EPS × P/E, xử lý doanh nghiệp chu kỳ (P/E thấp ở đỉnh là bẫy), kiểm tra sự kiện quyền trong file giá (cảnh báo vượt biên độ), dòng tiền/ETF, tách sự kiện đã xảy ra với khả năng; chạy chi_bao.py trên file người dùng.",
+      "files": []
+    }
+  ]
+}
