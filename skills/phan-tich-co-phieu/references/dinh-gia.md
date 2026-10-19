@@ -79,10 +79,25 @@ phải lợi nhuận đổi. Khi đó cần tìm xem kỳ vọng nào thay đổ
 | Trường hợp | Cách làm |
 |---|---|
 | Ngân hàng, CTCK, bảo hiểm | P/B hợp lý = (ROE − g)/(r − g) (`nganh` = ngan_hang...). ROE dùng mức bền vững, không lấy năm đột biến |
-| Chu kỳ hàng hóa | Lợi nhuận giữa chu kỳ (trung bình 7–10 năm) × P/E giữa chu kỳ; hoặc P/B so với ROE trung bình chu kỳ |
+| Chu kỳ hàng hóa | Lợi nhuận giữa chu kỳ × P/E giữa chu kỳ + tiền ròng; hoặc P/B so với ROE giữa chu kỳ. Trong `dinh_gia.py` đặt `"nganh": "chu_ky"` và khối `"chu_ky"` (xem mục 7a) |
 | Bất động sản | RNAV: giá trị dự án theo dòng tiền chiết khấu − nợ ròng, chiết khấu 20–40% cho rủi ro pháp lý/thanh khoản |
 | Holding/đa ngành | Tổng các phần (SOTP), chiết khấu holding 10–30% |
 | Doanh nghiệp lỗ hoặc mới | EV/doanh thu so với ngành và con đường đến hòa vốn; không dùng P/E |
+
+### 7a. Doanh nghiệp chu kỳ trong `dinh_gia.py`
+
+Ví dụ đầy đủ: `assets/mau_chu_ky_DPM.json`. Các trường:
+- `"nganh": "chu_ky"`: script bỏ mô hình tăng trưởng EPS (không hợp với lợi nhuận lên xuống theo
+  giá hàng hóa) và in cảnh báo khi lợi nhuận 12 tháng gần nhất > 1,3 lần trung vị chu kỳ.
+- `chu_ky.kich_ban`: mỗi kịch bản có `lnst_giua_chu_ky` (tỷ đồng/năm, gắn với một mức giá hàng hóa
+  cụ thể trong `ly_do`), `pe` (thường 8–11 cho phần hoạt động), `trong_so`.
+- `chu_ky.tien_rong` và `thu_nhap_tai_chinh_rong_sau_thue`: tách tiền ròng khỏi phần hoạt động để
+  không đếm hai lần lãi tiền gửi. Với doanh nghiệp tiền ròng lớn, đây là chênh lệch đáng kể.
+- Kết quả có "LN giữa chu kỳ ngụ ý" từ giá hiện tại: so với lợi nhuận ở mức giá hàng hóa hợp lý
+  để biết thị trường đang giả định chu kỳ ở đâu.
+
+Cần ít nhất 8–10 năm lợi nhuận để thấy trọn một chu kỳ. Năm thiếu số liệu thì bỏ trống; script
+không tính tăng trưởng qua năm bị thiếu.
 
 ## 8. Lỗi định giá hay gặp
 

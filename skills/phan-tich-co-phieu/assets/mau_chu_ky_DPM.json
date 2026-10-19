@@ -1,0 +1,46 @@
+{
+  "_ghi_chu": {
+    "nguon": "Thông cáo KQKD/BCTC qua báo chí (VnExpress, CafeF, Vietstock, Tin nhanh CK), ABS (31/12/2025), ACBS (05/08/2026). Tổng hợp 19/10/2026.",
+    "lnst_me": "2017, 2021–2025 dùng LNST hợp nhất làm xấp xỉ (cổ đông thiểu số nhỏ); 2019 suy ra từ mức tăng 83% của 2020; 2018 không có số cả năm nên bỏ.",
+    "lnst_ttm_me": "ước tính = 2025 (~1.080) + 6T/2026 (1.308) - 6T/2025 (~608)",
+    "tien_rong": "ước tính: tiền + tiền gửi 9.003 - nợ vay ~4.200 (31/12/2025), trừ cổ tức ~1.019 tỷ trả trong quý 3/2026, cộng dòng tiền 6 tháng",
+    "von_csh_me_hien_tai": "VCSH hợp nhất 30/6/2026 = tổng tài sản 18.496 - nợ phải trả 6.950",
+    "so_cp": "vốn điều lệ 6.800 tỷ sau đợt thưởng 73,75% (chốt 08/08/2025)"
+  },
+  "ma": "DPM", "nganh": "chu_ky", "san": "HOSE",
+  "gia_hien_tai": 21250, "ngay_gia": "2026-10-19",
+  "so_cp_luu_hanh_trieu": 679.97,
+  "lnst_ttm_me": 1780,
+  "von_csh_me_hien_tai": 11546,
+  "lai_suat_tpcp_10n": 0.041,
+  "chiet_khau": 0.12,
+  "tang_truong_dai_han": 0.03,
+  "chu_ky": {
+    "tien_rong": 4000,
+    "thu_nhap_tai_chinh_rong_sau_thue": 200,
+    "kich_ban": {
+      "bi_quan": {"lnst_giua_chu_ky": 800, "pe": 8, "trong_so": 0.25,
+                  "ly_do": "Urê về 350–380 USD/tấn khi Trung Quốc xuất khẩu mạnh, giá khí đầu vào tăng do mỏ Cửu Long suy giảm"},
+      "co_so": {"lnst_giua_chu_ky": 1250, "pe": 10, "trong_so": 0.5,
+                "ly_do": "Urê ~420 USD/tấn (giả định 2027–2030 của Vietcap), hưởng đủ thuế VAT 5% từ 7/2025, NPK/DAP tăng dần"},
+      "lac_quan": {"lnst_giua_chu_ky": 1700, "pe": 11, "trong_so": 0.25,
+                   "ly_do": "Urê bình quân ~480–500 USD/tấn do căng thẳng Trung Đông, hạn chế xuất khẩu của Trung Quốc"}
+    }
+  },
+  "lich_su_gia_eps": [
+    {"ngay": "đỉnh 3/2026", "gia": 31800, "eps_ttm": 1588},
+    {"ngay": "2026-08-05", "gia": 22200, "eps_ttm": 2618},
+    {"ngay": "2026-10-19", "gia": 21250, "eps_ttm": 2618}
+  ],
+  "nam": {
+    "2017": {"lnst": 895, "lnst_me": 895},
+    "2019": {"lnst_me": 378},
+    "2020": {"lnst": 701.6, "lnst_me": 691.3},
+    "2021": {"doanh_thu": 13117, "lnst": 3172, "lnst_me": 3172},
+    "2022": {"lnst": 5584, "lnst_me": 5584},
+    "2023": {"lnst": 543, "lnst_me": 543},
+    "2024": {"lnst": 554.3, "lnst_me": 554.3, "co_tuc_tien_da_tra": 586.5},
+    "2025": {"doanh_thu": 16564, "lnst": 1095.6, "lnst_me": 1080, "co_tuc_tien_da_tra": 586.5,
+             "tong_tai_san": 17776, "von_csh": 11533, "no_phai_tra": 6243, "no_vay": 4200, "tien_va_dtnh": 9003}
+  }
+}

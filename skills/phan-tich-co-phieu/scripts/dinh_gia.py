@@ -57,7 +57,10 @@ def roe_nam(d, t):
 def chi_so_nam(ds_nam, so):
     out = {}
     for idx, y in enumerate(ds_nam):
-        d, t = so[y], so[ds_nam[idx - 1]] if idx > 0 else None
+        d = so[y]
+        # Chỉ so với năm liền trước; thiếu năm thì không tính tăng trưởng/bình quân để tránh so lệch kỳ
+        t = so[ds_nam[idx - 1]] if idx > 0 and str(ds_nam[idx - 1]).isdigit() and str(y).isdigit() \
+            and int(ds_nam[idx - 1]) == int(y) - 1 else None
         lnst_me, lnst, lntt = g(d, "lnst_me"), g(d, "lnst"), g(d, "lntt")
         dt_ = g(d, "doanh_thu")
         vcsh_me, vcsh = g(d, "von_csh_me") or g(d, "von_csh"), g(d, "von_csh")
@@ -204,6 +207,63 @@ def kich_ban_mac_dinh(cagr5, chi_tra):
     }
 
 
+def dinh_gia_chu_ky(dl, so, ds_nam, gia, cp, von_hoa, lnst_ttm, vcsh_me, r):
+    """Doanh nghiệp chu kỳ (phân bón, thép, hóa chất, dầu khí...): định giá trên lợi nhuận GIỮA chu kỳ.
+
+    Giá trị = (LN giữa chu kỳ - thu nhập tài chính ròng sau thuế) x P/E giữa chu kỳ + tiền ròng.
+    Tách tiền ròng ra để không đếm hai lần: lãi tiền gửi đã nằm trong lợi nhuận.
+    """
+    ck = dl.get("chu_ky") or {}
+    ln = [g(so[y], "lnst_me") for y in ds_nam if g(so[y], "lnst_me") is not None]
+    if len(ln) < 3:
+        return {"canh_bao": ["Cần >= 3 năm (tốt nhất 8–10 năm, đủ một chu kỳ) để định giá doanh nghiệp chu kỳ"]}
+    ln_sx = sorted(ln)
+    tv, tbinh = statistics.median(ln), statistics.mean(ln)
+    p25 = ln_sx[max(0, int(round(0.25 * (len(ln_sx) - 1))))]
+    tien_rong = float(ck.get("tien_rong", 0))
+    tn_tc = float(ck.get("thu_nhap_tai_chinh_rong_sau_thue", 0))
+    out = {"so_nam": len(ln), "lnst_trung_vi": tv, "lnst_binh_quan": tbinh, "lnst_phan_vi_25": p25,
+           "lnst_ttm_so_trung_vi": chia(lnst_ttm, tv), "PE_tren_trung_vi": chia(von_hoa, tv),
+           "PE_tren_binh_quan": chia(von_hoa, tbinh), "tien_rong": tien_rong,
+           "tien_rong_tren_von_hoa": chia(tien_rong, von_hoa), "thu_nhap_tai_chinh_rong_sau_thue": tn_tc,
+           "canh_bao": []}
+    if tv and lnst_ttm > 1.3 * tv:
+        out["canh_bao"].append(
+            f"Lợi nhuận 12 tháng gần nhất gấp {fmt_so(lnst_ttm / tv, 1)} lần trung vị {len(ln)} năm: P/E thấp hiện tại "
+            "có thể là bẫy đỉnh chu kỳ. Định giá theo lợi nhuận giữa chu kỳ.")
+    kb = ck.get("kich_ban") or {
+        "bi_quan": {"lnst_giua_chu_ky": p25, "pe": 8, "trong_so": 0.25},
+        "co_so": {"lnst_giua_chu_ky": tv, "pe": 10, "trong_so": 0.5},
+        "lac_quan": {"lnst_giua_chu_ky": tbinh, "pe": 11, "trong_so": 0.25},
+        "_ghi_chu": "MẶC ĐỊNH: phân vị 25 / trung vị / bình quân lợi nhuận các năm có trong file",
+    }
+    out["kich_ban_la_mac_dinh"] = "kich_ban" not in ck
+    kq_kb = {}
+    for ten, k in kb.items():
+        if ten.startswith("_"):
+            continue
+        ln_hd = max(0.0, float(k["lnst_giua_chu_ky"]) - tn_tc)
+        tong = ln_hd * float(k["pe"]) + tien_rong
+        mcp = tong * 1e9 / (cp * 1e6)
+        kq_kb[ten] = {"gia_dinh": k, "lnst_hoat_dong": ln_hd, "gia_tri_ty": tong, "gia_tri": mcp,
+                      "bien_an_toan": 1 - gia / mcp if mcp > 0 else None}
+    out["kich_ban"] = kq_kb
+    ts = sum(kb[t_].get("trong_so", 0) for t_ in kq_kb)
+    if ts:
+        out["gia_tri_ky_vong"] = sum(kq_kb[t_]["gia_tri"] * kb[t_].get("trong_so", 0) for t_ in kq_kb) / ts
+        out["bien_an_toan_ky_vong"] = 1 - gia / out["gia_tri_ky_vong"]
+    pe_ref = float(kb.get("co_so", {}).get("pe", 10))
+    out["lnst_ngu_y"] = (von_hoa - tien_rong) / pe_ref + tn_tc
+    out["pe_tham_chieu_ngu_y"] = pe_ref
+    if vcsh_me and "co_so" in kq_kb:
+        roe_g = float(kb["co_so"]["lnst_giua_chu_ky"]) / vcsh_me
+        gdh = float(dl.get("tang_truong_dai_han", 0.03))
+        pb = pb_hop_ly(roe_g, gdh, r)
+        out.update({"ROE_giua_chu_ky": roe_g, "PB_hop_ly": pb,
+                    "gia_theo_PB_hop_ly": pb * vcsh_me * 1e9 / (cp * 1e6) if pb else None})
+    return out
+
+
 def phan_ra(lich_su):
     """Phân rã biến động giá giữa các mốc thành phần do EPS và phần do P/E (kỳ vọng)."""
     out = []
@@ -227,20 +287,25 @@ def chay(dl):
     von_hoa = gia * cp * 1e6 / 1e9
     cs = chi_so_nam(ds_nam, so)
     n = len(ds_nam) - 1
-    so_nam_cagr = min(5, n)
-    c5 = cagr(g(so[ds_nam[max(0, n - 5)]], "lnst_me"), g(cuoi, "lnst_me"), so_nam_cagr)
-    call = cagr(g(so[ds_nam[0]], "lnst_me"), g(cuoi, "lnst_me"), n)
+    nam_cuoi = int(ds_nam[-1])
+    nam_dau5 = next((y for y in ds_nam if int(y) >= nam_cuoi - 5), ds_nam[0])
+    so_nam_cagr = nam_cuoi - int(nam_dau5)
+    c5 = cagr(g(so[nam_dau5], "lnst_me"), g(cuoi, "lnst_me"), so_nam_cagr)
+    call = cagr(g(so[ds_nam[0]], "lnst_me"), g(cuoi, "lnst_me"), nam_cuoi - int(ds_nam[0]))
     chi_tra_ls = [cs[y]["ty_le_chi_tra_co_tuc"] for y in ds_nam[-3:] if cs[y]["ty_le_chi_tra_co_tuc"] is not None]
     chi_tra = round(statistics.mean(chi_tra_ls), 2) if chi_tra_ls else 0.3
-    kb = dl.get("kich_ban") or kich_ban_mac_dinh(c5, chi_tra)
-    mac_dinh = "kich_ban" not in dl
+    la_chu_ky = dl.get("nganh") == "chu_ky" or "chu_ky" in dl
+    kb = dl.get("kich_ban") or ({} if la_chu_ky else kich_ban_mac_dinh(c5, chi_tra))
+    mac_dinh = "kich_ban" not in dl and not la_chu_ky
 
     kq = {"ma": dl.get("ma"), "nganh": dl.get("nganh"), "gia": gia, "ngay_gia": dl.get("ngay_gia"),
           "von_hoa_ty": von_hoa, "eps_ttm": eps0, "PE_ttm": gia / eps0 if eps0 > 0 else None,
           "loi_suat_loi_nhuan": eps0 / gia, "CAGR_lnst_me_5n": c5, "so_nam_tinh_CAGR": so_nam_cagr,
           "CAGR_lnst_me_toan_ky": call,
           "canh_bao": ([f"Chỉ có {n + 1} năm số liệu: CAGR và kịch bản mặc định kém tin cậy, nên dùng >= 6 năm "
-                        "để thấy trọn một chu kỳ"] if n < 5 else []),
+                        "để thấy trọn một chu kỳ"] if n < 5 else [])
+                       + (["Doanh nghiệp chu kỳ: CAGR phụ thuộc năm đầu/cuối rơi vào đâu trong chu kỳ, ít ý nghĩa"]
+                          if dl.get("nganh") == "chu_ky" else []),
           "so_nam_lnst_tang": sum(1 for y in ds_nam[1:] if (cs[y]["tang_lnst_me"] or 0) > 0),
           "so_nam_lo": sum(1 for y in ds_nam if (g(so[y], "lnst_me") or 0) < 0),
           "chi_so_nam": cs}
@@ -292,11 +357,14 @@ def chay(dl):
         kq["gia_mua_toi_da_co_so"] = dg["co_so"]["gia_tri"] * (1 - mos)
     kq["dinh_gia"] = dg
     kq["kich_ban_la_mac_dinh"] = mac_dinh
-    kq["ngu_y"] = {
-        "tang_truong_10n_pe_cuoi_12": tang_truong_ngu_y(gia, eps0, 12, r, chi_tra, n1=10),
-        "tang_truong_10n_pe_cuoi_15": tang_truong_ngu_y(gia, eps0, 15, r, chi_tra, n1=10),
-        "tang_truong_5n_roi_5pct_pe_cuoi_10": tang_truong_ngu_y(gia, eps0, 10, r, chi_tra, g2_co_dinh=0.05),
-    }
+    if not la_chu_ky or dg:
+        kq["ngu_y"] = {
+            "tang_truong_10n_pe_cuoi_12": tang_truong_ngu_y(gia, eps0, 12, r, chi_tra, n1=10),
+            "tang_truong_10n_pe_cuoi_15": tang_truong_ngu_y(gia, eps0, 15, r, chi_tra, n1=10),
+            "tang_truong_5n_roi_5pct_pe_cuoi_10": tang_truong_ngu_y(gia, eps0, 10, r, chi_tra, g2_co_dinh=0.05),
+        }
+    if la_chu_ky:
+        kq["chu_ky"] = dinh_gia_chu_ky(dl, so, ds_nam, gia, cp, von_hoa, lnst_ttm, vcsh_me, r)
     if dl.get("nganh") in ("ngan_hang", "chung_khoan", "bao_hiem") and vcsh_me:
         roe = cs[ds_nam[-1]]["ROE"]
         gdh = float(dl.get("tang_truong_dai_han", 0.06))
@@ -324,8 +392,8 @@ def in_tom_tat(kq):
           f"{fmt_so(c['no_vay_tren_vcsh'], 2)} | {fmt_so(c['CFO_tren_lnst'], 2)} | {fmt_so(c['FCF_tren_lnst'], 2)} | {fmt_pct(c['ty_le_tich_luy_sloan'])} |")
     if kq.get("piotroski"):
         pi = kq["piotroski"]
-        p(f"\n- Piotroski F-score: {pi['diem']}/{pi['so_tieu_chi']} tiêu chí tính được" if pi["so_tieu_chi"]
-          else "\n- Piotroski F-score: không đủ dữ liệu (cần 2 năm liền có CĐKT + LCTT)")
+        p(f"\n- Piotroski F-score: {pi['diem']}/{pi['so_tieu_chi']} tiêu chí tính được" if pi["so_tieu_chi"] >= 5
+          else f"\n- Piotroski F-score: không đủ dữ liệu ({pi['so_tieu_chi']}/9 tiêu chí; cần 2 năm liền có CĐKT + LCTT)")
     if kq.get("beneish"):
         p(f"- Beneish M-score: {fmt_so(kq['beneish']['M'], 2)} → {kq['beneish']['danh_gia']}")
     if kq.get("altman_z2"):
@@ -334,6 +402,11 @@ def in_tom_tat(kq):
         k = kq["kiem_dinh_giu_lai"]
         p(f"- Kiểm định 1 đồng giữ lại: giữ lại {fmt_so(k['loi_nhuan_giu_lai'])} tỷ, vốn hóa tăng {fmt_so(k['von_hoa_tang'])} tỷ "
           f"→ {fmt_so(k['ty_le'], 2)} lần ({k['ket_luan']})")
+    if kq.get("chu_ky"):
+        in_chu_ky(kq)
+    if not kq["dinh_gia"]:
+        in_phan_ra(kq)
+        return
     p(f"\n## Định giá (chiết khấu {fmt_pct(kq['suat_chiet_khau'])})" + (" – KỊCH BẢN MẶC ĐỊNH, cần sửa" if kq["kich_ban_la_mac_dinh"] else ""))
     p("| Kịch bản | g năm 1–5 | g năm 6–10 | P/E cuối | Giá trị | Biên an toàn | Lợi suất kỳ vọng/năm |")
     p("|---|---|---|---|---|---|---|")
@@ -345,12 +418,43 @@ def in_tom_tat(kq):
         p(f"\n- Giá trị bình quân theo trọng số: {fmt_so(kq['gia_tri_ky_vong'])} (biên an toàn {fmt_pct(kq['bien_an_toan_ky_vong'])})")
     if kq.get("gia_mua_toi_da_co_so"):
         p(f"- Giá mua tối đa theo kịch bản cơ sở và biên an toàn mong muốn: {fmt_so(kq['gia_mua_toi_da_co_so'])}")
-    ny = kq["ngu_y"]
-    p(f"- Giá hiện tại ngụ ý EPS tăng {fmt_pct(ny['tang_truong_10n_pe_cuoi_12'])}/năm x10 năm (P/E cuối 12), "
-      f"{fmt_pct(ny['tang_truong_10n_pe_cuoi_15'])} (P/E cuối 15), hoặc {fmt_pct(ny['tang_truong_5n_roi_5pct_pe_cuoi_10'])} "
-      "x5 năm rồi 5% (P/E cuối 10)")
+    ny = kq.get("ngu_y") or {}
+    if ny:
+        p(f"- Giá hiện tại ngụ ý EPS tăng {fmt_pct(ny['tang_truong_10n_pe_cuoi_12'])}/năm x10 năm (P/E cuối 12), "
+          f"{fmt_pct(ny['tang_truong_10n_pe_cuoi_15'])} (P/E cuối 15), hoặc {fmt_pct(ny['tang_truong_5n_roi_5pct_pe_cuoi_10'])} "
+          "x5 năm rồi 5% (P/E cuối 10)")
     if kq.get("PB_hop_ly"):
         p(f"- P/B hợp lý (ROE, g dài hạn): {fmt_so(kq['PB_hop_ly'], 2)} → {fmt_so(kq['gia_theo_PB_hop_ly'])} đ/cp")
+    in_phan_ra(kq)
+
+
+def in_chu_ky(kq):
+    p, c = print, kq["chu_ky"]
+    p("\n## Định giá doanh nghiệp chu kỳ (lợi nhuận giữa chu kỳ)")
+    for cb in c.get("canh_bao", []):
+        p(f"> CẢNH BÁO: {cb}")
+    if "kich_ban" not in c:
+        return
+    p(f"- {c['so_nam']} năm: LNST mẹ trung vị {fmt_so(c['lnst_trung_vi'])} tỷ, bình quân {fmt_so(c['lnst_binh_quan'])} tỷ, "
+      f"12 tháng gần nhất = {fmt_so(c['lnst_ttm_so_trung_vi'], 1)} lần trung vị")
+    p(f"- Vốn hóa / LN trung vị = {fmt_so(c['PE_tren_trung_vi'], 1)} lần; tiền ròng {fmt_so(c['tien_rong'])} tỷ "
+      f"({fmt_pct(c['tien_rong_tren_von_hoa'])} vốn hóa)")
+    p("| Kịch bản | LN giữa chu kỳ | − thu nhập tài chính | P/E | Giá trị (tỷ) | Giá trị/cp | Biên an toàn |")
+    p("|---|---|---|---|---|---|---|")
+    for t, v in c["kich_ban"].items():
+        k = v["gia_dinh"]
+        p(f"| {t} | {fmt_so(k['lnst_giua_chu_ky'])} | {fmt_so(c['thu_nhap_tai_chinh_rong_sau_thue'])} | {fmt_so(k['pe'], 1)} | "
+          f"{fmt_so(v['gia_tri_ty'])} | {fmt_so(v['gia_tri'])} | {fmt_pct(v['bien_an_toan'])} |")
+    if c.get("gia_tri_ky_vong"):
+        p(f"\n- Giá trị bình quân trọng số: {fmt_so(c['gia_tri_ky_vong'])} đ/cp (biên an toàn {fmt_pct(c['bien_an_toan_ky_vong'])})"
+          + (" – KỊCH BẢN MẶC ĐỊNH, cần sửa" if c["kich_ban_la_mac_dinh"] else ""))
+    p(f"- Giá hiện tại ngụ ý LN giữa chu kỳ ≈ {fmt_so(c['lnst_ngu_y'])} tỷ/năm (ở P/E {fmt_so(c['pe_tham_chieu_ngu_y'], 0)} cho phần hoạt động)")
+    if c.get("PB_hop_ly"):
+        p(f"- ROE giữa chu kỳ {fmt_pct(c['ROE_giua_chu_ky'])} → P/B hợp lý {fmt_so(c['PB_hop_ly'], 2)} → {fmt_so(c['gia_theo_PB_hop_ly'])} đ/cp")
+
+
+def in_phan_ra(kq):
+    p = print
     if kq.get("phan_ra_bien_dong"):
         p("\n## Phân rã biến động giá")
         for x in kq["phan_ra_bien_dong"]:

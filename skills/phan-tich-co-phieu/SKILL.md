@@ -117,6 +117,9 @@ Theo `references/dinh-gia.md`:
 4. So với lịch sử định giá của chính mã và doanh nghiệp cùng ngành trong và ngoài nước.
 5. Ngân hàng, CTCK, bảo hiểm: dùng P/B so với ROE (script tính P/B hợp lý khi `nganh` là
    `ngan_hang`, `chung_khoan` hoặc `bao_hiem`).
+6. Doanh nghiệp chu kỳ (phân bón, thép, hóa chất, dầu khí, cao su...): đặt `"nganh": "chu_ky"` và
+   khai báo lợi nhuận giữa chu kỳ theo từng mức giá hàng hóa, tiền ròng (mẫu
+   `assets/mau_chu_ky_DPM.json`). P/E thấp ở đỉnh lợi nhuận là cái bẫy phổ biến nhất của nhóm này.
 
 ## Bước 6 – Dòng tiền, sự kiện, chất xúc tác
 
