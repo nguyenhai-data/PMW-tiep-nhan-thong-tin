@@ -1,0 +1,64 @@
+name: Build APK phân tích cổ phiếu
+
+on:
+  push:
+    branches: [main, ccr-e791c0cb-bsp9ex]
+    paths:
+      - 'app-phan-tich-co-phieu/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-phan-tich-co-phieu
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Đặt tên APK theo phiên bản
+        id: apk
+        run: |
+          TEN="PhanTichCoPhieu-v1.0.${GITHUB_RUN_NUMBER}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$TEN"
+          echo "ten=$TEN" >> "$GITHUB_OUTPUT"
+          echo "phieu=$(ls app/src/main/assets/reports | sed 's/\.html$//' | paste -sd ', ' -)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.ten }}
+          path: app-phan-tich-co-phieu/${{ steps.apk.outputs.ten }}
+
+      - name: Đăng lên Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-v1.0.${{ github.run_number }}
+          name: Phân tích cổ phiếu v1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            App Android đọc các phiếu phân tích cổ phiếu (chạy offline).
+            Phiếu trong bản này: ${{ steps.apk.outputs.phieu }}
+
+            Cài đặt: tải file .apk bên dưới trên điện thoại Android, mở file và cho phép cài từ nguồn này.
+            Bản mới cài đè lên bản cũ, không cần gỡ.
+          files: app-phan-tich-co-phieu/${{ steps.apk.outputs.ten }}

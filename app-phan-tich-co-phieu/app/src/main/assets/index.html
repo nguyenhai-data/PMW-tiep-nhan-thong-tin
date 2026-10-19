@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phân tích cổ phiếu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Literata:opsz,wght@7..72,700&family=JetBrains+Mono:wght@600&display=swap">
+<style>
+/* Layout: danh sách phiếu một cột, mỗi phiếu một thẻ bấm được; cùng hệ màu và chữ với các phiếu */
+:root{
+  --paper:#F4F6F9; --card:#FFFFFF; --ink:#141A26; --muted:#586174; --line:#DCE1E9;
+  --ai:#22395E; --ai-soft:#E4EAF4;
+  --up:#0B8A4E; --up-soft:#DDF3E7; --down:#C4362C; --down-soft:#F8E1DE; --warn:#9A6200; --warn-soft:#FBEED3;
+  --f-display:"Literata", Georgia, "Noto Serif", serif;
+  --f-body:"Be Vietnam Pro", system-ui, Roboto, "Segoe UI", sans-serif;
+  --f-data:"JetBrains Mono", ui-monospace, "Roboto Mono", monospace;
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+    --ai:#93B3EA; --ai-soft:#1D2A42; --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+    --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+  --ai:#93B3EA; --ai-soft:#1D2A42; --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+  --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-block:20px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:6px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--f-display);font-size:26px;line-height:1.2;margin:0;text-wrap:balance}
+.muted{color:var(--muted)} .small{font-size:13px}
+#loc{width:100%;font:inherit;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+#loc:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+.list{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;color:inherit;text-decoration:none}
+.card:active{background:var(--ai-soft)}
+.card:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sym{font-family:var(--f-data);font-weight:600;font-size:14px;background:var(--ink);color:var(--paper);padding:2px 8px;border-radius:3px;letter-spacing:.05em}
+.px{font-family:var(--f-data);font-weight:600;font-size:20px;font-variant-numeric:tabular-nums;margin-left:auto}
+.ten{font-size:13px;color:var(--muted);min-width:0}
+.title{font-family:var(--f-display);font-weight:700;font-size:17px;line-height:1.3;margin:0;text-wrap:balance}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px}
+.v-up{background:var(--up-soft);color:var(--up)} .v-warn{background:var(--warn-soft);color:var(--warn)} .v-down{background:var(--down-soft);color:var(--down)}
+.kl{font-size:14px;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.foot{font-size:12.5px;color:var(--muted)}
+.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Phiếu nghiên cứu · skill phan-tich-co-phieu</div>
+    <h1>Phân tích cổ phiếu</h1>
+    <div class="small muted" id="tom-tat">Đang tải danh sách…</div>
+  </header>
+  <label class="small muted" for="loc">Lọc theo mã hoặc tên doanh nghiệp</label>
+  <input id="loc" type="search" placeholder="Ví dụ: FPT, phân bón" autocomplete="off">
+  <ul class="list" id="ds"></ul>
+  <p class="foot">Mỗi phiếu ghi rõ nguồn, ngày số liệu và phần ước tính. Đây là tài liệu hỗ trợ ra quyết định, không phải khuyến nghị đầu tư. Bấm vào link nguồn trong phiếu để mở bằng trình duyệt.</p>
+</div>
+<script src="danh_sach.js"></script>
+<script>
+(function(){
+  var ds = window.DANH_SACH || [];
+  var ul = document.getElementById("ds"), loc = document.getElementById("loc");
+  function ngayVN(s){ var p = s.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+  function boDau(s){ return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase(); }
+  function ve(tu){
+    ul.textContent = "";
+    var q = boDau(tu || "");
+    var hien = ds.filter(function(x){ return !q || boDau(x.ma + " " + x.ten + " " + x.tieu_de).indexOf(q) >= 0; });
+    if (!hien.length){
+      var li = document.createElement("li"); li.className = "empty";
+      li.textContent = ds.length ? "Không có phiếu nào khớp với “" + tu + "”." : "Chưa có phiếu nào. Thêm phiếu bằng tools/dong_goi_bao_cao.py.";
+      ul.appendChild(li); return;
+    }
+    hien.forEach(function(x){
+      var li = document.createElement("li");
+      var a = document.createElement("a"); a.className = "card"; a.href = x.file;
+      var r1 = document.createElement("div"); r1.className = "row";
+      var sym = document.createElement("span"); sym.className = "sym"; sym.textContent = x.ma;
+      var ngay = document.createElement("span"); ngay.className = "small muted"; ngay.textContent = (x.san ? x.san + " · " : "") + ngayVN(x.ngay);
+      var px = document.createElement("span"); px.className = "px"; px.textContent = x.gia + " đ";
+      r1.append(sym, ngay, px);
+      var ten = document.createElement("div"); ten.className = "ten"; ten.textContent = x.ten;
+      var t = document.createElement("p"); t.className = "title"; t.textContent = x.tieu_de;
+      var pills = document.createElement("div"); pills.className = "pills";
+      (x.nhan || []).forEach(function(n){ var s = document.createElement("span"); s.className = "pill v-" + n.muc; s.textContent = n.chu; pills.appendChild(s); });
+      var kl = document.createElement("p"); kl.className = "kl"; kl.textContent = x.ket_luan;
+      a.append(r1, ten, t, pills, kl); li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  document.getElementById("tom-tat").textContent = ds.length
+    ? ds.length + " phiếu · mới nhất " + ngayVN(ds[0].ngay)
+    : "Chưa có phiếu";
+  loc.addEventListener("input", function(){ ve(loc.value.trim()); });
+  ve("");
+})();
+</script>
+</body>
+</html>
