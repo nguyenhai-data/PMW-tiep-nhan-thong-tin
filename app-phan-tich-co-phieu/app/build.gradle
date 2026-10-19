@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Mỗi lần GitHub Actions build, số thứ tự lần chạy thành versionCode để bản mới cài đè được bản cũ
+def soBuild = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace 'vn.pmw.phantichcophieu'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'vn.pmw.phantichcophieu'
+        minSdk 26
+        targetSdk 34
+        versionCode soBuild
+        versionName "1.0.${soBuild}"
+    }
+
+    // Khóa ký cố định (khóa debug chuẩn của Android) để các bản cập nhật cài đè lên nhau được.
+    // App chỉ dùng cài tay (sideload), không phát hành lên Google Play.
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}

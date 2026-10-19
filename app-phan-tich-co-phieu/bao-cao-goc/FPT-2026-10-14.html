@@ -1,0 +1,612 @@
+<title>FPT qua lăng kính Buffett và nến Nhật</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Literata:opsz,wght@7..72,500;7..72,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: phiếu nghiên cứu một cột (~860px), đầu phiếu kiểu bảng giá, hai lăng kính đặt cạnh nhau rồi đi sâu từng phần */
+:root{
+  --paper:#F4F6F9; --card:#FFFFFF; --ink:#141A26; --muted:#586174; --line:#DCE1E9;
+  --ai:#22395E;      /* chàm (藍) – màu nhấn */
+  --ai-soft:#E4EAF4;
+  --up:#0B8A4E; --up-soft:#DDF3E7;   /* xanh = tăng (quy ước VN) */
+  --down:#C4362C; --down-soft:#F8E1DE; /* đỏ = giảm */
+  --warn:#9A6200; --warn-soft:#FBEED3;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-data:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+    --ai:#93B3EA; --ai-soft:#1D2A42;
+    --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+    --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+  --ai:#93B3EA; --ai-soft:#1D2A42;
+  --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+  --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.62}
+.wrap{max-width:880px;margin:0 auto;padding-block:28px 64px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(26px,4.4vw,36px);font-weight:700}
+h2{font-size:clamp(21px,3.2vw,26px);font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0;max-width:68ch}
+a{color:var(--ai)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ai);outline-offset:2px;border-radius:4px}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+section{display:flex;flex-direction:column;gap:16px}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+/* ---- Đầu phiếu ---- */
+.masthead{display:flex;flex-direction:column;gap:18px;border-bottom:2px solid var(--ink);padding-bottom:22px}
+.tickerrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 28px}
+.ticker{display:flex;align-items:baseline;gap:12px}
+.ticker .sym{font-family:var(--f-data);font-weight:600;font-size:15px;background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:3px;letter-spacing:.06em}
+.px{font-family:var(--f-data);font-size:clamp(30px,6vw,42px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.chg{font-family:var(--f-data);color:var(--up);font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 22px;margin:0}
+@media (max-width:520px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.facts div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.facts dt{font-size:12px;color:var(--muted)}
+.facts dd{margin:0;font-family:var(--f-data);font-variant-numeric:tabular-nums;font-weight:600;font-size:15px}
+
+/* ---- Hai lăng kính ---- */
+.lenses{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.lenses{grid-template-columns:1fr}}
+.lens{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.verdict{align-self:flex-start;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.v-up{background:var(--up-soft);color:var(--up)}
+.v-warn{background:var(--warn-soft);color:var(--warn)}
+.v-down{background:var(--down-soft);color:var(--down)}
+.lens ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.bottomline{border-left:3px solid var(--ai);padding:4px 0 4px 16px}
+.bottomline p{font-size:16.5px}
+
+/* ---- Bảng ---- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.r,th.r{text-align:right}
+td.num{white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* ---- Biểu đồ ---- */
+.figure{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.figure svg{width:100%;height:auto;display:block}
+.chart-txt{fill:var(--muted);font-family:var(--f-data);font-size:11px}
+.chart-val{fill:var(--ink);font-family:var(--f-data);font-size:11px;font-weight:600}
+.grid-line{stroke:var(--line);stroke-width:1}
+.bar{fill:var(--ai)}
+.bar-last{fill:var(--up)}
+.cap{font-size:12.5px;color:var(--muted)}
+
+/* ---- Máy tính định giá ---- */
+.calc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+@media (max-width:720px){.calc{grid-template-columns:1fr}}
+.calc .inputs{display:flex;flex-direction:column;gap:14px;min-width:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ai);border-color:var(--ai);color:var(--card)}
+.field{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.field label{font-size:13.5px}
+.field output{font-family:var(--f-data);font-variant-numeric:tabular-nums;font-weight:600;font-size:14px}
+.field input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ai)}
+.calc .results{display:flex;flex-direction:column;gap:14px;min-width:0}
+.big{font-family:var(--f-data);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.res-grid div{display:flex;flex-direction:column;gap:2px}
+.res-grid span:first-child{font-size:12px;color:var(--muted)}
+.res-grid span:last-child{font-family:var(--f-data);font-weight:600;font-variant-numeric:tabular-nums}
+.meter{position:relative;height:10px;border-radius:999px;background:var(--ai-soft)}
+.meter .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--up)}
+.meter .tick{position:absolute;top:-4px;width:2px;height:18px;background:var(--ink)}
+
+/* ---- Thang giá ---- */
+.ladder-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.svg-scroll{overflow-x:auto}
+.svg-scroll svg{min-width:520px}
+.lvl-res{fill:var(--down)} .lvl-sup{fill:var(--up)} .lvl-now{fill:var(--ai)}
+.lvl-line-res{stroke:var(--down);stroke-width:1.5}
+.lvl-line-sup{stroke:var(--up);stroke-width:1.5}
+.lvl-line-now{stroke:var(--ai);stroke-width:2.5}
+.lvl-line-psy{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.lvl-lbl{fill:var(--ink);font-family:var(--f-body);font-size:11.5px}
+.lvl-px{font-family:var(--f-data);font-size:11.5px;font-weight:600}
+
+/* ---- Nến minh họa ---- */
+.cndl-up{fill:var(--up);stroke:var(--up)}
+.cndl-down{fill:var(--down);stroke:var(--down)}
+.wick{stroke-width:1.5}
+.cndl-ghost{fill:none;stroke:var(--muted);stroke-dasharray:3 3}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:620px){.scen{grid-template-columns:1fr}}
+.scen .figure h3{font-size:15.5px}
+
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.plan{grid-template-columns:1fr}}
+.plan .lens ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+
+.sources{font-size:13px;color:var(--muted)}
+.sources ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.note{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.note b{color:var(--warn)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Phiếu nghiên cứu cổ phiếu · cập nhật 14/10/2026</div>
+    <h1>FPT qua lăng kính Buffett và nến Nhật</h1>
+    <div class="tickerrow">
+      <div class="ticker"><span class="sym">HOSE: FPT</span><span class="muted small">CTCP FPT</span></div>
+      <div class="ticker"><span class="px">57.100</span><span class="chg">+800 (+1,42%)</span></div>
+      <div class="muted small">Biên độ phiên 14/10: <span class="num">55.800 – 57.700</span> · KL ≈ <span class="num">6,8–7</span> triệu cp</div>
+    </div>
+    <dl class="facts">
+      <div><dt>Vốn hóa (sau thưởng 10:1)</dt><dd>≈ 107.700 tỷ đ</dd></div>
+      <div><dt>P/E 12 tháng gần nhất</dt><dd>≈ 10,6 lần</dd></div>
+      <div><dt>P/E dự phóng 2026</dt><dd>≈ 10,1 lần</dd></div>
+      <div><dt>ROE 2025</dt><dd>28,3%</dd></div>
+      <div><dt>So với đầu năm 2026</dt><dd class="down">≈ −36%</dd></div>
+      <div><dt>So với đỉnh 01/2025</dt><dd class="down">≈ −54%</dd></div>
+    </dl>
+  </header>
+
+  <!-- KẾT LUẬN -->
+  <section aria-labelledby="ketluan">
+    <h2 id="ketluan">Kết luận nhanh</h2>
+    <div class="lenses">
+      <article class="lens">
+        <div class="eyebrow">Lăng kính 1 · Warren Buffett</div>
+        <span class="verdict v-up">Doanh nghiệp tốt, giá rẻ: tích lũy từng phần</span>
+        <ul>
+          <li>Lợi nhuận công ty mẹ tăng liên tục 8 năm, CAGR 2018–2025 khoảng <b>20%/năm</b>; ROE quanh <b>28%</b>; tiền và đầu tư ngắn hạn lớn hơn nợ vay.</li>
+          <li>Giá trị nội tại kịch bản cơ sở khoảng <b class="num">77.700 đ</b>, tức biên an toàn khoảng <b>26%</b> tại giá 57.100 đ.</li>
+          <li>Điểm chưa chắc chắn là <b>con hào kinh tế</b>: AI có thể làm giảm giá trị mô hình gia công tính theo giờ công. Đây là kiểu rủi ro công nghệ mà chính Buffett thường né.</li>
+        </ul>
+      </article>
+      <article class="lens">
+        <div class="eyebrow">Lăng kính 2 · Nến Nhật</div>
+        <span class="verdict v-warn">Xu hướng giảm, mới có tín hiệu đảo chiều đầu tiên: chờ xác nhận</span>
+        <ul>
+          <li>Đỉnh thấp dần, đáy thấp dần ở cả khung ngày, tuần, tháng. Khối ngoại vẫn bán ròng liên tiếp, riêng 9 phiên gần nhất gần 550 tỷ đồng.</li>
+          <li>Phiên 14/10: giá thủng đáy 27/7 (56.561) xuống <b class="num">55.800</b> rồi đóng cửa <b class="num">57.100</b>, khối lượng tăng, ngược chiều VN-Index giảm 14,55 điểm. Đây là dấu hiệu phe bán cạn lực.</li>
+          <li>Cần một nến tăng đóng cửa trên <b class="num">57.700</b>, tốt hơn là trên <b class="num">60.400</b>, với khối lượng trên trung bình 20 phiên. Nếu đóng cửa dưới <b class="num">55.800</b> thì tín hiệu bị hủy.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="bottomline">
+      <p><b>Kết hợp:</b> Buffett trả lời câu hỏi <i>mua cái gì, giá nào</i>; nến Nhật trả lời <i>khi nào</i>. FPT đang ở vùng giá mà nhà đầu tư giá trị có thể bắt đầu gom dần (giải ngân khoảng 1/3 vị thế dự kiến). Phần còn lại nên chờ nến xác nhận đảo chiều hoặc chờ KQKD 9 tháng xác nhận tăng trưởng hợp đồng ký mới.</p>
+    </div>
+  </section>
+
+  <!-- BỐI CẢNH -->
+  <section aria-labelledby="boicanh">
+    <div class="eyebrow">Bối cảnh</div>
+    <h2 id="boicanh">Vì sao cổ phiếu giảm khi lợi nhuận vẫn tăng</h2>
+    <p>Năm 2026 FPT vẫn tăng trưởng hai chữ số: 8 tháng đạt doanh thu <span class="num">35.408</span> tỷ đồng (+13,5%), lợi nhuận trước thuế <span class="num">7.648</span> tỷ đồng (+17,5%), lợi nhuận công ty mẹ <span class="num">6.761</span> tỷ đồng (khoảng +13%). Giá cổ phiếu vẫn giảm vì bốn lực cùng lúc:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Lực bán</th><th>Diễn giải</th></tr></thead>
+        <tbody>
+          <tr><td><b>Định giá lại ngành dịch vụ CNTT toàn cầu</b></td><td>Accenture hạ dự báo doanh thu (6/2026), chỉ số Nifty IT về đáy 3 năm. Ngày 13/10/2026, TCS giao dịch ở P/E 14,7 lần, Infosys 12,9 lần. Thị trường lo AI tự động hóa lập trình và kéo giảm đơn giá gia công.</td></tr>
+          <tr><td><b>Khối ngoại rút vốn</b></td><td>Từ đầu năm, khối ngoại đã bán ròng khoảng 180 triệu cp (hơn 14.700–15.000 tỷ đồng). Tỷ lệ sở hữu nước ngoài xuống dưới 28%, trong khi FPT từng kín room 49% nhiều năm.</td></tr>
+          <tr><td><b>Chu kỳ đầu tư đỉnh</b></td><td>Hai AI Factory (Hà Nội, Nhật Bản) có tổng vốn khoảng 10.900 tỷ đồng theo TCBS. Khấu hao cao giai đoạn 2024–2026; TCBS kỳ vọng áp lực này giảm từ 2027.</td></tr>
+          <tr><td><b>Kỳ vọng cũ quá cao</b></td><td>Đầu 2025, P/E gần 30 lần, trong khi doanh thu 2025 chỉ tăng 11,6%. Mức P/E trung bình 5 năm khoảng 20,6 lần (MBS); hiện còn khoảng một nửa.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Lưu ý so sánh số liệu:</b> từ 2026 FPT hạch toán FPT Telecom theo phương pháp vốn chủ sở hữu, nên doanh thu 2026 thấp hơn số cũ. Số 2025 đã được FPT điều chỉnh lại cho cùng phương pháp. Mọi mức giá trước ngày 21/9/2026 trong phiếu này đã được chia cho 1,1 để tính đến đợt thưởng cổ phiếu 10:1 (chốt quyền 22/9/2026).</div>
+  </section>
+
+  <!-- BUFFETT -->
+  <section aria-labelledby="buffett">
+    <div class="eyebrow">Lăng kính 1 · Warren Buffett</div>
+    <h2 id="buffett">12 nguyên tắc Buffett áp vào FPT</h2>
+    <p class="muted">Khung 12 nguyên tắc theo cuốn <i>The Warren Buffett Way</i> (Robert Hagstrom): 3 về doanh nghiệp, 3 về ban lãnh đạo, 4 về tài chính, 2 về thị trường.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nhóm</th><th>Nguyên tắc</th><th>Bằng chứng ở FPT</th><th>Đánh giá</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3">Doanh nghiệp</td><td>Đơn giản, dễ hiểu</td><td>Ba mảng: dịch vụ CNTT (trong nước và nước ngoài), viễn thông, giáo dục. Mô hình gia công dễ hiểu; mảng AI và bán dẫn khó dự báo hơn.</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Lịch sử hoạt động ổn định</td><td>Lợi nhuận công ty mẹ tăng mọi năm 2018–2025, không năm nào lỗ. Riêng 2021–2024 tăng trên 20%/năm.</td><td><span class="pill v-up">Đạt</span></td></tr>
+          <tr><td>Triển vọng dài hạn (con hào)</td><td>Có lợi thế chi phí kỹ sư Việt Nam, quan hệ lâu năm với Nhật Bản, quy mô đủ lớn để thắng dự án trên 10 triệu USD (26 dự án năm 2025). Rủi ro: AI làm giảm nhu cầu nhân lực lập trình, kéo giảm đơn giá.</td><td><span class="pill v-warn">Đang bị thử thách</span></td></tr>
+          <tr><td rowspan="3">Ban lãnh đạo</td><td>Phân bổ vốn hợp lý</td><td>Cổ tức tiền đều 20% mệnh giá/năm. Đầu tư AI Factory đã qua điểm hòa vốn (TCBS). Tuy vậy, công ty chưa mua cổ phiếu quỹ dù P/E chỉ khoảng 10 lần; ĐHĐCĐ 2026 mới nói "sẽ cân nhắc".</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Thẳng thắn với cổ đông</td><td>Công bố KQKD hằng tháng, hiếm có ở doanh nghiệp niêm yết Việt Nam. Kế hoạch và mục tiêu theo thị trường được công khai.</td><td><span class="pill v-up">Đạt</span></td></tr>
+          <tr><td>Không chạy theo đám đông</td><td>Đi theo chiến lược Nhật Bản và chuyển đổi số từ sớm. Đầu tư mạnh vào AI và bán dẫn có thể là tầm nhìn đúng, nhưng cũng có thể là chạy theo trào lưu.</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td rowspan="4">Tài chính</td><td>ROE cao, không nhờ đòn bẩy</td><td>ROE 28,1% (2023), 28,7% (2024), 28,3% (2025). Cuối 2025: nợ vay khoảng 21.000 tỷ đồng, trong khi tiền và đầu tư ngắn hạn khoảng 40.150 tỷ đồng, tức tiền ròng dương.</td><td><span class="pill v-up">Đạt</span></td></tr>
+          <tr><td>Lợi nhuận chủ sở hữu (owner earnings)</td><td>Capex đang ở đỉnh chu kỳ (AI Factory, văn phòng, trung tâm dữ liệu), nên dòng tiền tự do thấp hơn lợi nhuận kế toán trong 2024–2026.</td><td><span class="pill v-warn">Tạm thời yếu</span></td></tr>
+          <tr><td>Biên lợi nhuận cao, cải thiện</td><td>Biên LNTT tăng từ 16,6% (2018) lên 18,6% (2025). Theo phương pháp hợp nhất mới, 6 tháng 2026 đạt 21,8%.</td><td><span class="pill v-up">Đạt</span></td></tr>
+          <tr><td>Kiểm định "1 đồng giữ lại"</td><td>Cuối 2021 đến 8 tháng 2026: lợi nhuận giữ lại khoảng 23.600 tỷ đồng, vốn hóa tăng khoảng 23.300 tỷ đồng (từ 84.400 lên 107.700 tỷ đồng). Tỷ lệ khoảng 1,0 lần, vừa đạt ngay cả khi giá đang ở đáy.</td><td><span class="pill v-up">Đạt (sát ngưỡng)</span></td></tr>
+          <tr><td rowspan="2">Thị trường</td><td>Xác định giá trị nội tại</td><td>Chiết khấu EPS 10 năm, suất chiết khấu 12%: bi quan khoảng 42.300 đ, cơ sở khoảng 77.700 đ, lạc quan khoảng 113.400 đ. Xem máy tính bên dưới.</td><td><span class="pill v-up">77.700 đ (cơ sở)</span></td></tr>
+          <tr><td>Mua với biên an toàn</td><td>Biên an toàn khoảng 26% theo kịch bản cơ sở. Giá hiện tại ngụ ý EPS chỉ tăng khoảng 12%/năm trong 5 năm, sau đó 5%/năm, và P/E cuối kỳ 10 lần.</td><td><span class="pill v-up">Đạt ở kịch bản cơ sở</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Tổng: 7 đạt, 5 một phần, không nguyên tắc nào trượt hẳn. Điểm yếu tập trung ở câu hỏi định tính: con hào có còn nguyên sau làn sóng AI hay không.</p>
+
+    <div class="figure">
+      <h3>Lợi nhuận sau thuế công ty mẹ, 2018–2025 (tỷ đồng)</h3>
+      <svg id="npatChart" viewBox="0 0 640 270" role="img" aria-label="Biểu đồ cột lợi nhuận công ty mẹ FPT 2018 đến 2025, tăng từ 2.620 lên 9.369 tỷ đồng"></svg>
+      <div class="cap">Dòng dưới mỗi cột: biên lợi nhuận trước thuế. Năm 2017 bị loại vì có lãi bất thường từ thoái vốn mảng bán lẻ và phân phối. Nguồn: thông cáo KQKD hằng năm của FPT. Số 2018, 2020, 2022 được đối chiếu qua tốc độ tăng trưởng FPT công bố cho năm kế tiếp.</div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Chỉ tiêu định giá</th><th class="r">Giá trị</th><th>Cách tính / nguồn</th></tr></thead>
+        <tbody>
+          <tr><td>Số cổ phiếu sau thưởng</td><td class="r num">≈ 1,886 tỷ</td><td>Vốn điều lệ 18.858 tỷ đồng sau đợt thưởng 171,4 triệu cp</td></tr>
+          <tr><td>LNST công ty mẹ 12 tháng gần nhất</td><td class="r num">≈ 10.150 tỷ</td><td>Năm 2025 (9.369) + 8T/2026 (6.761) − 8T/2025 (≈ 5.983)</td></tr>
+          <tr><td>EPS 12 tháng gần nhất (điều chỉnh)</td><td class="r num">≈ 5.380 đ</td><td>Chia cho số cổ phiếu sau thưởng</td></tr>
+          <tr><td>Lợi suất lợi nhuận (E/P)</td><td class="r num">≈ 9,4%</td><td>So với lợi suất TPCP 10 năm khoảng 4,0–4,1% (đấu thầu đầu 2026)</td></tr>
+          <tr><td>P/B</td><td class="r num">≈ 2,7 lần</td><td>Ước tính; vốn chủ sở hữu công ty mẹ khoảng 39–40 nghìn tỷ đồng</td></tr>
+          <tr><td>Cổ tức tiền mặt</td><td class="r num">≈ 3,5%</td><td>2.000 đ/cp/năm trên giá 57.100 đ, nếu duy trì 20% mệnh giá sau thưởng</td></tr>
+          <tr><td>Giá mục tiêu CTCK (đã chia 1,1)</td><td class="r num">82.400 – 86.100</td><td>VDSC 94.700, BVSC 94.500, BSC 90.600 (5–7/2026, trước thưởng)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Máy tính giá trị nội tại kiểu Buffett</h3>
+    <p class="small muted">Mô hình: EPS tăng theo hai giai đoạn trong 10 năm. Cổ tức nhận hằng năm và giá bán cuối năm thứ 10 (EPS × P/E cuối kỳ) được chiết khấu về hiện tại. Mặc định là kịch bản cơ sở; kéo thanh trượt để thử giả định của bạn.</p>
+    <div class="calc">
+      <div class="inputs">
+        <div class="seg" role="group" aria-label="Chọn kịch bản">
+          <button type="button" id="sc-bear" data-sc="bear" aria-pressed="false">Bi quan</button>
+          <button type="button" id="sc-base" data-sc="base" aria-pressed="true">Cơ sở</button>
+          <button type="button" id="sc-bull" data-sc="bull" aria-pressed="false">Lạc quan</button>
+        </div>
+        <div class="field"><label for="g1">Tăng trưởng EPS năm 1–5</label><output id="g1o" for="g1"></output><input id="g1" type="range" min="0" max="25" step="0.5" value="13"></div>
+        <div class="field"><label for="g2">Tăng trưởng EPS năm 6–10</label><output id="g2o" for="g2"></output><input id="g2" type="range" min="0" max="20" step="0.5" value="9"></div>
+        <div class="field"><label for="pe">P/E cuối năm thứ 10</label><output id="peo" for="pe"></output><input id="pe" type="range" min="6" max="25" step="0.5" value="12"></div>
+        <div class="field"><label for="r">Suất chiết khấu (lợi nhuận yêu cầu)</label><output id="ro" for="r"></output><input id="r" type="range" min="8" max="18" step="0.5" value="12"></div>
+        <div class="field"><label for="po">Tỷ lệ chi trả cổ tức</label><output id="poo" for="po"></output><input id="po" type="range" min="0" max="70" step="5" value="35"></div>
+        <div class="field"><label for="mos">Biên an toàn mong muốn</label><output id="moso" for="mos"></output><input id="mos" type="range" min="10" max="50" step="5" value="30"></div>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="stack" style="gap:4px">
+          <span class="eyebrow">Giá trị nội tại / cổ phiếu</span>
+          <span class="big" id="ivOut">—</span>
+          <span class="small" id="mosOut">—</span>
+        </div>
+        <div class="stack" style="gap:6px">
+          <div class="meter" aria-hidden="true"><div class="fill" id="meterFill"></div><div class="tick" id="meterTick"></div></div>
+          <span class="small muted">Thanh xanh: giá trị nội tại. Vạch đen: giá hiện tại 57.100 đ.</span>
+        </div>
+        <div class="res-grid">
+          <div><span>Giá mua tối đa (theo biên an toàn)</span><span id="buyOut">—</span></div>
+          <div><span>Lợi nhuận kỳ vọng/năm nếu mua 57.100 đ</span><span id="retOut">—</span></div>
+          <div><span>EPS năm thứ 10</span><span id="eps10Out">—</span></div>
+          <div><span>EPS gốc (12 tháng gần nhất)</span><span class="num">5.381 đ</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NẾN NHẬT -->
+  <section aria-labelledby="nen">
+    <div class="eyebrow">Lăng kính 2 · Nến Nhật</div>
+    <h2 id="nen">Đọc nến: phe bán đã đuối, phe mua chưa xác nhận</h2>
+
+    <h3>Khung lớn (tháng, tuần): xu hướng giảm chưa gãy</h3>
+    <p>Từ đỉnh tháng 1/2025 (khoảng 123.300 đ sau điều chỉnh), FPT đã giảm khoảng 54%. Trong năm 2026 có ba nhịp đáy: giữa tháng 5 (dưới 70.000 đ trước điều chỉnh), ngày 27/7 (56.561 đ sau điều chỉnh) và ngày 14/10 (55.800 đ). Giữa hai đáy sau là nhịp hồi lên 67.450 đ ngày 10/9. Đáy tháng 10 chỉ thấp hơn đáy tháng 7 khoảng 1,3%, nên cấu trúc đang nghiêng về một <b>đáy kép</b>. Đường viền cổ là 67.450 đ; chỉ khi giá vượt mức này, xu hướng tăng mới được xác lập.</p>
+
+    <h3>Khung ngày: 15 phiên không tăng và một nến phản công</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Phiên</th><th class="r">Giá (đ)</th><th>Diễn biến</th></tr></thead>
+        <tbody>
+          <tr><td class="num">10/09</td><td class="r num">67.450</td><td>Đỉnh 3 tháng trong phiên (74.200 đ trước điều chỉnh), ngay khi FPT chốt ngày thưởng cổ phiếu</td></tr>
+          <tr><td class="num">16/09</td><td class="r num">—</td><td>Tăng với khối lượng vượt trung bình 20 phiên (Vietstock)</td></tr>
+          <tr><td class="num">23/09</td><td class="r num">66.600</td><td>Giá mở cửa, khởi đầu chuỗi 11 phiên giảm liên tiếp (23/9–7/10)</td></tr>
+          <tr><td class="num">05/10</td><td class="r num">61.900</td><td>Đóng cửa</td></tr>
+          <tr><td class="num">06/10</td><td class="r num down">60.400</td><td>−2,42%</td></tr>
+          <tr><td class="num">08/10</td><td class="r num">—</td><td>Đứng giá, phiên duy nhất không giảm trong chuỗi</td></tr>
+          <tr><td class="num">09/10</td><td class="r num down">57.900</td><td>Giảm tiếp</td></tr>
+          <tr><td class="num">12/10</td><td class="r num down">57.100</td><td>KL khoảng 5,9 triệu cp</td></tr>
+          <tr><td class="num">13/10</td><td class="r num down">56.300</td><td>−1,40%, giá đóng cửa thấp nhất 52 tuần; khối ngoại bán ròng 106,8 tỷ đồng</td></tr>
+          <tr><td class="num">14/10</td><td class="r num up">57.100</td><td>+1,42%, đáy phiên 55.800, đỉnh phiên 57.700, KL khoảng 7 triệu cp. Tăng khi VN-Index giảm 14,55 điểm. Khối ngoại vẫn bán ròng 67,4 tỷ đồng</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack">
+      <p><b>Quy tắc 8–10 phiên của Sakata.</b> Truyền thống nến Nhật cho rằng sau khoảng 8–10 lần lập giá thấp mới liên tiếp, thị trường đã đi quá đà và dễ có nhịp hồi. FPT đã có 14 phiên giảm trong 15 phiên, kéo giá từ 66.600 xuống 56.300 đ (−15,5%). Đà giảm đã quá dài theo chuẩn này.</p>
+      <p><b>Nến 14/10.</b> Giá đóng cửa nằm ở khoảng 68% biên độ phiên, tính từ đáy lên. Phe mua đã đẩy giá ngược lên từ dưới đáy tháng 7, khối lượng lớn hơn phiên giảm trước đó, và cổ phiếu tăng khi thị trường chung giảm. Ba dấu hiệu này cho thấy lực bán đang cạn. Nguồn công khai không ghi giá mở cửa từng phiên, nên chưa thể gọi chính xác tên mẫu nến (búa, nhấn chìm tăng hay đường xuyên). Hãy kiểm tra trên biểu đồ trước khi đặt lệnh.</p>
+    </div>
+
+    <div class="ladder-grid">
+      <div class="figure">
+        <h3>Thang giá: hỗ trợ và kháng cự (đ, đã điều chỉnh)</h3>
+        <div class="svg-scroll"><svg id="ladder" viewBox="0 0 640 380" role="img" aria-label="Thang giá FPT từ 50.000 đến 68.000 đồng với các mức hỗ trợ, kháng cự và giá hiện tại 57.100"></svg></div>
+        <div class="cap">Vẽ theo cùng một thang giá. Đỏ: kháng cự; xanh: hỗ trợ; chàm: giá đóng cửa 14/10. Thanh đứng là biên độ cao–thấp phiên 14/10, vạch ngang là giá đóng cửa.</div>
+      </div>
+      <div class="stack">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Mức</th><th class="r">Giá</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill v-down">K3</span></td><td class="r num">66.600–67.450</td><td>Đỉnh tháng 9, đường viền cổ đáy kép</td></tr>
+              <tr><td><span class="pill v-down">K2</span></td><td class="r num">60.400–61.900</td><td>Vùng gãy đầu tháng 10</td></tr>
+              <tr><td><span class="pill v-down">K1</span></td><td class="r num">57.700–57.900</td><td>Đỉnh nến 14/10, đóng cửa 9/10: ngưỡng xác nhận đầu tiên</td></tr>
+              <tr><td><span class="pill v-up">H1</span></td><td class="r num">55.800–56.561</td><td>Đáy 14/10 và đáy 27/7: vùng đáy kép</td></tr>
+              <tr><td><span class="pill v-up">H2</span></td><td class="r num">≈ 50.000</td><td>Mốc tâm lý nếu vùng đáy kép thất bại</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted">Nếu đáy kép hoàn thành (vượt 67.450 đ), mục tiêu đo theo chiều cao mẫu hình là khoảng 79.000 đ. Đây là kịch bản trung hạn, chưa phải tín hiệu hiện tại.</p>
+      </div>
+    </div>
+
+    <h3>Hai kịch bản cho các phiên tới</h3>
+    <div class="scen">
+      <div class="figure">
+        <h3 class="up">Xác nhận đảo chiều</h3>
+        <svg id="scenUp" viewBox="0 0 380 170" role="img" aria-label="Minh họa: sau nến 14/10 là một nến tăng thân dài đóng cửa trên 57.700"></svg>
+        <p class="small">Một nến tăng thân dài đóng cửa trên 57.700 đ, KL trên trung bình 20 phiên, tạo thành cụm giống <b>sao mai</b> hoặc <b>ba chàng lính trắng</b>. Mạnh hơn nữa nếu khối ngoại ngừng bán ròng. Mục tiêu: 60.400–61.900, sau đó 66.600–67.450.</p>
+      </div>
+      <div class="figure">
+        <h3 class="down">Thất bại, giảm tiếp</h3>
+        <svg id="scenDown" viewBox="0 0 380 170" role="img" aria-label="Minh họa: giá quay đầu và đóng cửa dưới 55.800"></svg>
+        <p class="small">Một nến giảm nuốt trọn nến 14/10 và đóng cửa dưới 55.800 đ là mẫu <b>nhấn chìm giảm</b>, xác nhận phá đáy kép. Khi đó dễ có thêm một nhịp xuống vùng 50.000 đ. Nhà giao dịch ngắn hạn nên đứng ngoài.</p>
+      </div>
+    </div>
+    <p class="cap">Hai hình trên minh họa mẫu nến cần chờ, không phải dữ liệu thật. Nến đánh dấu * dùng giá đóng cửa thật nhưng giá mở cửa (và cao, thấp của 13/10) là giả định; T+1, T+2 là phiên giả định.</p>
+  </section>
+
+  <!-- KẾ HOẠCH -->
+  <section aria-labelledby="kehoach">
+    <div class="eyebrow">Hành động</div>
+    <h2 id="kehoach">Kế hoạch theo từng kiểu nhà đầu tư</h2>
+    <div class="plan">
+      <article class="lens">
+        <h3>Đầu tư giá trị (3–5 năm)</h3>
+        <ol>
+          <li><b>Đợt 1, khoảng 1/3 vị thế:</b> vùng 55.000–58.000 đ hiện tại. Biên an toàn khoảng 26% so với giá trị cơ sở.</li>
+          <li><b>Đợt 2, khoảng 1/3:</b> khi có nến xác nhận đóng cửa trên 60.400 đ, hoặc khi giá về 50.000–52.000 đ (biên an toàn trên 33%).</li>
+          <li><b>Đợt 3, phần còn lại:</b> sau KQKD 9 tháng và quý 4, nếu hợp đồng ký mới ở mảng CNTT nước ngoài vẫn tăng trên 20%.</li>
+          <li><b>Điều kiện bán (theo luận điểm, không theo giá):</b> hợp đồng ký mới tăng trưởng âm 2 quý liền, tăng trưởng LNTT mảng CNTT nước ngoài dưới 5%, hoặc ROE dưới 20%.</li>
+        </ol>
+      </article>
+      <article class="lens">
+        <h3>Giao dịch theo nến (vài tuần)</h3>
+        <ol>
+          <li><b>Chưa mua đuổi.</b> Một nến tăng sau 14 phiên giảm mới là tín hiệu, chưa phải xác nhận.</li>
+          <li><b>Điểm mua:</b> sau phiên đóng cửa trên 57.700 đ với khối lượng trên trung bình 20 phiên.</li>
+          <li><b>Cắt lỗ:</b> khi giá đóng cửa dưới 55.500 đ (rủi ro khoảng 4% từ điểm mua quanh 57.800 đ).</li>
+          <li><b>Chốt lời từng phần:</b> 60.400–61.900 đ, sau đó 66.600–67.450 đ. Tỷ lệ lợi nhuận/rủi ro khoảng 1,1–1,8 lần cho mục tiêu đầu và khoảng 4 lần cho mục tiêu sau.</li>
+        </ol>
+      </article>
+    </div>
+
+    <h3>Chỉ số cần theo dõi</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Chỉ số</th><th>Mức hiện tại</th><th>Ngưỡng cảnh báo</th></tr></thead>
+        <tbody>
+          <tr><td>Hợp đồng ký mới CNTT nước ngoài</td><td class="num">26.338 tỷ, +32,3% (6T/2026)</td><td>Tăng dưới 10%</td></tr>
+          <tr><td>Số dự án lớn trên 10 triệu USD</td><td class="num">14 dự án, +27,3% (6T/2026)</td><td>Giảm so với cùng kỳ</td></tr>
+          <tr><td>Tăng trưởng LNTT toàn tập đoàn</td><td class="num">+17,5% (8T/2026)</td><td>Dưới 10%</td></tr>
+          <tr><td>Tiến độ kế hoạch LNTT 2026 (11.629 tỷ)</td><td class="num">66% sau 8 tháng</td><td>Dưới 90% khi kết thúc năm</td></tr>
+          <tr><td>Doanh thu AI Factory</td><td class="num">Trên 300 tỷ (6T), mục tiêu 25–30 triệu USD cả năm</td><td>Công suất dưới 70%</td></tr>
+          <tr><td>Dòng vốn khối ngoại</td><td class="num">Bán ròng liên tiếp, gần 550 tỷ trong 9 phiên</td><td>Tín hiệu tốt: mua ròng 3–5 phiên liên tiếp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Rủi ro chính</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tbody>
+          <tr><td><b>AI giảm giá trị gia công</b></td><td>Khách hàng dùng AI để tự viết mã, đòi giảm giá hoặc chuyển sang hợp đồng theo kết quả. Đây là rủi ro lớn nhất, quyết định con hào có còn hay không.</td></tr>
+          <tr><td><b>Tập trung vào Nhật Bản</b></td><td>Nhật là thị trường tăng nhanh nhất (+26,3% trong 9T/2025), nên đồng yên yếu hoặc kinh tế Nhật chững lại sẽ ảnh hưởng trực tiếp.</td></tr>
+          <tr><td><b>Khấu hao và capex</b></td><td>Nếu AI Factory không lấp đầy công suất ở Nhật, biên lợi nhuận bị bào mòn lâu hơn dự kiến.</td></tr>
+          <tr><td><b>Pha loãng nhẹ</b></td><td>Thưởng cổ phiếu không làm mất giá trị, nhưng ESOP (tối đa 0,5%/năm, giá 10.000 đ) là chi phí thật với cổ đông.</td></tr>
+          <tr><td><b>Dòng vốn ngoại</b></td><td>Room ngoại còn trống trên 20%. Đây là áp lực cung nếu khối ngoại tiếp tục rút, nhưng cũng là lực cầu tiềm năng khi họ quay lại.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- NGUỒN -->
+  <section class="sources" aria-labelledby="nguon">
+    <h3 id="nguon" style="color:var(--ink)">Nguồn và giới hạn dữ liệu</h3>
+    <p>Số liệu được tổng hợp qua tìm kiếm web ngày 14/10/2026. Phiếu này không truy cập được trực tiếp dữ liệu giá OHLC từng phiên (CafeF, Vietstock, VNDirect, TCBS bị chặn trong môi trường chạy). Vì vậy phần nến dựa trên giá đóng cửa và biên độ được báo chí công bố. Một số nguồn chênh nhau vài trăm đồng; phiếu ưu tiên giá đóng cửa của Vietstock. P/B, lợi nhuận giữ lại và cổ tức đã chi là ước tính. Phiếu này không phải khuyến nghị đầu tư.</p>
+    <ol>
+      <li><a href="https://cafef.vn/fpt-lai-rong-gan-30-ty-dong-moi-ngay-trong-thang-8-188260921175035375.chn" target="_blank" rel="noopener">CafeF: KQKD 8 tháng 2026</a></li>
+      <li><a href="https://cafef.vn/6-thang-dau-nam-2026-loi-nhuan-truoc-thue-cua-fpt-tang-truong-181-188260716134057667.chn" target="_blank" rel="noopener">CafeF: KQKD 6 tháng 2026</a> và <a href="https://fpt.com/-/media/project/fpt-corporation/fpt/ir/information-disclosures/year-report/2026/july/fpt_bc-kqkd-6m2026-(2).pdf" target="_blank" rel="noopener">báo cáo KQKD 6T/2026 của FPT</a></li>
+      <li><a href="https://vneconomy.vn/nam-2025-fpt-bao-lai-truoc-thue-tang-178-dat-hon-13000-ty-dong.htm" target="_blank" rel="noopener">VnEconomy: KQKD 2025</a>, <a href="https://cafef.vn/fpt-lai-truoc-thue-ky-luc-hon-11000-ty-nam-2024-eps-tang-truong-gan-22-188250124085643033.chn" target="_blank" rel="noopener">CafeF: KQKD 2024</a>, <a href="https://fpt.com/vi/tin-tuc/thong-cao-bao-chi/nam-2023-doanh-thu-va-loi-nhuan-fpt-tang-truong-hai-chu-so" target="_blank" rel="noopener">FPT: KQKD 2023</a>, <a href="https://nhadautu.vn/fpt-lai-6300-ty-dong-nam-2021-d62941.html" target="_blank" rel="noopener">Nhà Đầu tư: KQKD 2021</a>, <a href="https://nhadautu.vn/tap-doan-fpt-dat-hon-4660-ty-dong-loi-nhuan-truoc-thue-d32888.html" target="_blank" rel="noopener">Nhà Đầu tư: KQKD 2019</a></li>
+      <li><a href="https://vneconomy.vn/fpt-bao-lai-2804-ty-dong-quy-12026-thang-thau-8-du-an-lon.htm" target="_blank" rel="noopener">VnEconomy: KQKD quý 1/2026</a></li>
+      <li><a href="https://www.tcbs.com.vn/wp-content/uploads/2026/06/20260629_FPT_Bao_cao_phan_tich_lan_dau-1.pdf" target="_blank" rel="noopener">TCBS: báo cáo phân tích FPT (29/6/2026)</a>: bảng cân đối 2025, ROE, AI Factory</li>
+      <li><a href="https://www.marketscreener.com/quote/stock/FPT-CORPORATION-6500753/finances/" target="_blank" rel="noopener">MarketScreener: ROE 2021–2024</a></li>
+      <li><a href="https://dantri.com.vn/kinh-doanh/vi-sao-co-phieu-fpt-giam-miet-mai-du-kinh-doanh-van-tot-20261013084742066.htm" target="_blank" rel="noopener">Dân trí: Vì sao cổ phiếu FPT giảm miệt mài (13/10/2026)</a></li>
+      <li><a href="https://hanoimoi.vn/chung-khoan-ngay-14-10-vn-index-mat-gan-15-diem-fpt-tro-lai-sac-xanh-sau-chuoi-giam-gia-1761100.html" target="_blank" rel="noopener">Hà Nội Mới: phiên 14/10</a>, <a href="https://danviet.vn/fpt-nguoc-dong-tang-142-giua-luc-nhom-co-phieu-cong-nghe-suy-yeu-d1467144.html" target="_blank" rel="noopener">Dân Việt: phiên 14/10</a>, <a href="https://cafef.vn/fpt-tai-sinh-hay-tinh-sai-188261014233213759.chn" target="_blank" rel="noopener">CafeF: FPT tái sinh hay tính sai?</a></li>
+      <li><a href="https://dantri.com.vn/kinh-doanh/khoi-ngoai-ban-rong-hon-100-ty-dong-ma-fpt-20261012095635234.htm" target="_blank" rel="noopener">Dân trí: khối ngoại bán ròng FPT</a>, <a href="https://www.vietnam.vn/en/chung-khoan-13-10-fpt-miet-mai-giam-co-dong-thap-thom-truoc-da-lao-doc" target="_blank" rel="noopener">Vietnam.vn: chuỗi giảm 23/9–13/10</a>, <a href="https://mekongasean.vn/co-phieu-fpt-ve-day-3-nam-ho-room-ngoai-hon-20-60616.html" target="_blank" rel="noopener">Mekong ASEAN: đáy 3 năm, room ngoại</a></li>
+      <li><a href="https://cafef.vn/fpt-cong-bo-van-ban-quan-trong-co-phieu-len-cao-nhat-3-thang-188260910103058955.chn" target="_blank" rel="noopener">CafeF: đỉnh 3 tháng 10/9</a>, <a href="https://www.tinnhanhchungkhoan.vn/fpt-chot-quyen-chia-co-phieu-thuong-ty-le-101-post397426.html" target="_blank" rel="noopener">Tin nhanh Chứng khoán: thưởng cổ phiếu 10:1</a>, <a href="https://cafef.vn/ngay-trong-tuan-toi-fpt-se-chot-quyen-nhan-co-tuc-so-tien-du-chi-1700-ty-188260519214923637.chn" target="_blank" rel="noopener">CafeF: cổ tức tiền 2025</a></li>
+      <li><a href="https://vietstock.vn/2026/09/ngay-17092026-10-co-phieu-nong-duoi-goc-nhin-ptkt-cua-vietstock-585-1493005.htm" target="_blank" rel="noopener">Vietstock: PTKT ngày 17/9/2026</a>, <a href="https://signalhub.vn/phan-tich/fpt-20260729-1445" target="_blank" rel="noopener">SignalHub: FPT 29/7/2026</a></li>
+      <li><a href="https://index.vn/tin-tuc/vdsc-fpt-dang-o-vung-dinh-gia-rat-hap-dan" target="_blank" rel="noopener">VDSC</a>, <a href="https://bnews.vn/khuyen-nghi-co-phieu-fpt-gmd-va-trien-vong-nhom-ban-le-2026/426737.html" target="_blank" rel="noopener">BVSC (Bnews)</a>, <a href="https://suckhoedoisong.vn/bsc-khuyen-nghi-mua-co-phieu-fpt-16926051823114221.htm" target="_blank" rel="noopener">BSC</a>: giá mục tiêu</li>
+      <li><a href="https://tuoitre.vn/gia-co-phieu-giam-lien-tuc-co-dong-goi-y-do-gia-lanh-dao-fpt-noi-se-can-nhac-20260425222513656.htm" target="_blank" rel="noopener">Tuổi Trẻ: ĐHĐCĐ 2026, mua cổ phiếu quỹ</a>, <a href="https://doanhnhan.baophapluat.vn/tap-doan-fpt-fpt-du-chi-hon-1-700-ty-dong-tra-co-tuc-ty-le-10-phat-hanh-co-phieu-esop.html" target="_blank" rel="noopener">Doanh nhân: ESOP</a></li>
+      <li><a href="https://doanhnhan.baophapluat.vn/fpt-can-moc-doanh-thu-hon-70-000-ty-dong-mang-cong-nghe-nuoc-ngoai-ky-moi-vuot-1-5-ty-usd.html" target="_blank" rel="noopener">Doanh nhân: mảng CNTT nước ngoài 2025</a>, <a href="https://moneyf.vn/nha-may-ai-cua-fpt-gan-kin-cho-doanh-thu-6-thang-v-979qkqkn" target="_blank" rel="noopener">MoneyF: AI Factory</a></li>
+      <li><a href="https://thoibaotaichinhvietnam.vn/fpt-du-chia-co-tuc-40-dat-muc-tieu-tang-truong-khoang-20-nam-2022-102021.html" target="_blank" rel="noopener">Thời báo Tài chính: vốn hóa cuối 2021</a></li>
+      <li><a href="https://www.cnbc.com/2026/06/19/india-it-stocks-fall-accenture-cuts-revenue-forecast.html" target="_blank" rel="noopener">CNBC: Accenture hạ dự báo</a>, <a href="https://investing.com/news/stock-market-news/indian-it-stocks-and-ai-these-are-the-bull-and-bear-cases-93CH-4945391" target="_blank" rel="noopener">Investing.com: P/E TCS, Infosys</a></li>
+      <li><a href="https://baodauthau.vn/2-thang-dau-nam-2026-huy-dong-duoc-hon-60000-ty-dong-trai-phieu-chinh-phu-post194923.html" target="_blank" rel="noopener">Báo Đấu thầu: lãi suất TPCP 10 năm</a></li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function(){
+  var SVGNS="http://www.w3.org/2000/svg";
+  function el(tag, attrs, text){
+    var e=document.createElementNS(SVGNS, tag);
+    for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+    if(text!=null){ e.textContent=text; }
+    return e;
+  }
+  function fmt(n){ return Math.round(n).toLocaleString("vi-VN"); }
+
+  /* ---------- Biểu đồ lợi nhuận ---------- */
+  (function(){
+    var svg=document.getElementById("npatChart");
+    var years=[2018,2019,2020,2021,2022,2023,2024,2025];
+    var npat=[2620,3135,3538,4337,5310,6470,7849,9369];
+    var margin=[16.6,16.8,17.6,17.8,17.4,17.5,17.6,18.6];
+    var L=44,R=10,T=22,B=58,W=640,H=270,max=10000;
+    var ph=H-T-B, pw=W-L-R, step=pw/years.length, bw=step*0.56;
+    [0,2500,5000,7500,10000].forEach(function(v){
+      var y=T+ph-(v/max)*ph;
+      svg.appendChild(el("line",{x1:L,x2:W-R,y1:y,y2:y,"class":"grid-line"}));
+      svg.appendChild(el("text",{x:L-6,y:y+4,"text-anchor":"end","class":"chart-txt"}, v===0?"0":(v/1000).toLocaleString("vi-VN")+"k"));
+    });
+    years.forEach(function(yr,i){
+      var x=L+i*step+(step-bw)/2, h=(npat[i]/max)*ph, y=T+ph-h;
+      svg.appendChild(el("rect",{x:x,y:y,width:bw,height:h,rx:2,"class":i===years.length-1?"bar-last":"bar"}));
+      svg.appendChild(el("text",{x:x+bw/2,y:y-6,"text-anchor":"middle","class":"chart-val"}, fmt(npat[i])));
+      svg.appendChild(el("text",{x:x+bw/2,y:T+ph+17,"text-anchor":"middle","class":"chart-txt"}, String(yr)));
+      svg.appendChild(el("text",{x:x+bw/2,y:T+ph+36,"text-anchor":"middle","class":"chart-txt"}, margin[i].toLocaleString("vi-VN")+"%"));
+      if(i>0){
+        var g=(npat[i]/npat[i-1]-1)*100;
+        svg.appendChild(el("text",{x:x+bw/2,y:T+ph+52,"text-anchor":"middle","class":"chart-txt"}, "+"+g.toFixed(1).replace(".",",")+"%"));
+      }
+    });
+    svg.appendChild(el("text",{x:L-36,y:T+ph+36,"class":"chart-txt"},"Biên"));
+    svg.appendChild(el("text",{x:L-36,y:T+ph+52,"class":"chart-txt"},"Tăng"));
+  })();
+
+  /* ---------- Thang giá ---------- */
+  (function(){
+    var svg=document.getElementById("ladder");
+    var lo=49000, hi=68500, T=16, B=16, H=380, W=640, axisX=58, lineEnd=420, pxX=434, lblX=490;
+    function y(p){ return T+(hi-p)/(hi-lo)*(H-T-B); }
+    [50000,55000,60000,65000].forEach(function(p){
+      svg.appendChild(el("line",{x1:axisX,x2:lineEnd,y1:y(p),y2:y(p),"class":"grid-line"}));
+      svg.appendChild(el("text",{x:axisX-8,y:y(p)+4,"text-anchor":"end","class":"chart-txt"}, fmt(p)));
+    });
+    svg.appendChild(el("line",{x1:axisX,x2:axisX,y1:T,y2:H-B,"class":"grid-line"}));
+    var levels=[
+      {p:67450,t:"Đỉnh 10/9, viền cổ",k:"res"},
+      {p:66600,t:"Mở cửa 23/9",k:"res"},
+      {p:61900,t:"Đóng cửa 5/10",k:"res"},
+      {p:60400,t:"Đóng cửa 6/10",k:"res"},
+      {p:57700,t:"Đỉnh 14/10",k:"res"},
+      {p:57100,t:"Hiện tại",k:"now"},
+      {p:56561,t:"Đáy 27/7",k:"sup"},
+      {p:55800,t:"Đáy 14/10",k:"sup"},
+      {p:50000,t:"Mốc tâm lý",k:"psy"}
+    ];
+    // trải nhãn để không chồng nhau (khoảng cách tối thiểu 15px), giữ nguyên vị trí đường giá
+    var ly=levels.map(function(l){ return y(l.p); });
+    for(var pass=0;pass<20;pass++){
+      for(var i=1;i<ly.length;i++){
+        var gap=ly[i]-ly[i-1];
+        if(gap<15){ var d=(15-gap)/2; ly[i-1]-=d; ly[i]+=d; }
+      }
+    }
+    levels.forEach(function(l,i){
+      var yy=y(l.p);
+      var cls=l.k==="res"?"lvl-line-res":l.k==="sup"?"lvl-line-sup":l.k==="now"?"lvl-line-now":"lvl-line-psy";
+      svg.appendChild(el("line",{x1:axisX,x2:lineEnd,y1:yy,y2:yy,"class":cls}));
+      svg.appendChild(el("line",{x1:lineEnd,x2:pxX-3,y1:yy,y2:ly[i],"class":"grid-line"}));
+      var tc=l.k==="res"?"lvl-res":l.k==="sup"?"lvl-sup":l.k==="now"?"lvl-now":"chart-txt";
+      svg.appendChild(el("text",{x:pxX,y:ly[i]+4,"class":"lvl-px "+tc}, fmt(l.p)));
+      svg.appendChild(el("text",{x:lblX,y:ly[i]+4,"class":"lvl-lbl"}, l.t));
+    });
+    // biên độ phiên 14/10: đường cao–thấp và vạch giá đóng cửa
+    var cx=axisX+250;
+    svg.appendChild(el("line",{x1:cx,x2:cx,y1:y(57700),y2:y(55800),"class":"cndl-up wick"}));
+    svg.appendChild(el("line",{x1:cx,x2:cx+9,y1:y(57100),y2:y(57100),"class":"cndl-up wick"}));
+    svg.appendChild(el("text",{x:cx,y:y(55800)+16,"text-anchor":"middle","class":"chart-txt"},"phiên 14/10"));
+  })();
+
+  /* ---------- Nến minh họa ---------- */
+  function drawScenario(id, candles, refLines){
+    var svg=document.getElementById(id);
+    var lo=54500, hi=61500, T=12, B=22, H=170, W=380;
+    function y(p){ return T+(hi-p)/(hi-lo)*(H-T-B); }
+    refLines.forEach(function(r){
+      svg.appendChild(el("line",{x1:8,x2:W-8,y1:y(r.p),y2:y(r.p),"class":"lvl-line-psy"}));
+      svg.appendChild(el("text",{x:W-8,y:y(r.p)-4,"text-anchor":"end","class":"chart-txt"}, fmt(r.p)+" · "+r.t));
+    });
+    candles.forEach(function(c,i){
+      var x=36+i*52, up=c.c>=c.o, cls=up?"cndl-up":"cndl-down";
+      svg.appendChild(el("line",{x1:x,x2:x,y1:y(c.h),y2:y(c.l),"class":cls+" wick"}));
+      var top=y(Math.max(c.o,c.c)), bot=y(Math.min(c.o,c.c));
+      svg.appendChild(el("rect",{x:x-10,y:top,width:20,height:Math.max(2,bot-top),"class":cls}));
+      svg.appendChild(el("text",{x:x,y:H-6,"text-anchor":"middle","class":"chart-txt"}, c.lbl));
+    });
+  }
+  drawScenario("scenUp",[
+    {o:57100,h:57300,l:56100,c:56300,lbl:"13/10*"},
+    {o:56300,h:57700,l:55800,c:57100,lbl:"14/10*"},
+    {o:57200,h:58800,l:57000,c:58600,lbl:"T+1"},
+    {o:58600,h:60600,l:58400,c:60300,lbl:"T+2"}
+  ],[{p:57700,t:"xác nhận"},{p:55800,t:"đáy"}]);
+  drawScenario("scenDown",[
+    {o:57100,h:57300,l:56100,c:56300,lbl:"13/10*"},
+    {o:56300,h:57700,l:55800,c:57100,lbl:"14/10*"},
+    {o:57300,h:57500,l:55300,c:55500,lbl:"T+1"},
+    {o:55500,h:55700,l:54700,c:54900,lbl:"T+2"}
+  ],[{p:57700,t:"xác nhận"},{p:55800,t:"đáy"}]);
+
+  /* ---------- Máy tính định giá ---------- */
+  var PRICE=57100, EPS0=5381;
+  var SC={bear:{g1:7,g2:5,pe:9,r:12,po:35}, base:{g1:13,g2:9,pe:12,r:12,po:35}, bull:{g1:16,g2:11,pe:15,r:12,po:35}};
+  var ids=["g1","g2","pe","r","po","mos"];
+  var inp={}; ids.forEach(function(k){ inp[k]=document.getElementById(k); });
+  function pct(v){ return v.toLocaleString("vi-VN",{maximumFractionDigits:1})+"%"; }
+  function calc(){
+    var g1=+inp.g1.value/100, g2=+inp.g2.value/100, pe=+inp.pe.value, r=+inp.r.value/100, po=+inp.po.value/100, mos=+inp.mos.value/100;
+    document.getElementById("g1o").textContent=pct(+inp.g1.value);
+    document.getElementById("g2o").textContent=pct(+inp.g2.value);
+    document.getElementById("peo").textContent=(+inp.pe.value).toLocaleString("vi-VN")+" lần";
+    document.getElementById("ro").textContent=pct(+inp.r.value);
+    document.getElementById("poo").textContent=pct(+inp.po.value);
+    document.getElementById("moso").textContent=pct(+inp.mos.value);
+    var eps=EPS0, pv=0, divs=0;
+    for(var t=1;t<=10;t++){
+      eps*= t<=5 ? (1+g1) : (1+g2);
+      pv += po*eps/Math.pow(1+r,t);
+      divs += po*eps;
+    }
+    var terminal=eps*pe, iv=pv+terminal/Math.pow(1+r,10);
+    var ret=Math.pow((terminal+divs)/PRICE,0.1)-1;
+    var m=1-PRICE/iv;
+    document.getElementById("ivOut").textContent=fmt(iv)+" đ";
+    var mosEl=document.getElementById("mosOut");
+    mosEl.textContent = m>=0 ? "Giá hiện tại thấp hơn giá trị nội tại "+pct(m*100)+" (biên an toàn)" : "Giá hiện tại cao hơn giá trị nội tại "+pct(-m*100);
+    mosEl.className="small "+(m>=mos?"up":(m>=0?"":"down"));
+    document.getElementById("buyOut").textContent=fmt(iv*(1-mos))+" đ";
+    document.getElementById("retOut").textContent=pct(ret*100);
+    document.getElementById("eps10Out").textContent=fmt(eps)+" đ";
+    var scale=Math.max(iv,PRICE)*1.1;
+    document.getElementById("meterFill").style.width=(iv/scale*100)+"%";
+    document.getElementById("meterTick").style.left="calc("+(PRICE/scale*100)+"% - 1px)";
+  }
+  function setScenario(name){
+    var s=SC[name]; ["g1","g2","pe","r","po"].forEach(function(k){ inp[k].value=s[k]; });
+    document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.sc===name ? "true":"false"); });
+    calc();
+  }
+  document.querySelectorAll(".seg button").forEach(function(b){ b.addEventListener("click",function(){ setScenario(b.dataset.sc); }); });
+  ids.forEach(function(k){ inp[k].addEventListener("input",function(){
+    if(k!=="mos"){ document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed","false"); }); }
+    calc();
+  }); });
+  calc();
+})();
+</script>

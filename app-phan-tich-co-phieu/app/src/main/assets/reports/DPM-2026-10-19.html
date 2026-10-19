@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+.ve-danh-sach{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--ai);text-decoration:none;padding:6px 0}
+.ve-danh-sach{align-self:flex-start;margin-bottom:-24px}
+.ticker .sym{white-space:nowrap}
+</style>
+<title>DPM giữa chu kỳ urê</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Literata:opsz,wght@7..72,500;7..72,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: phiếu nghiên cứu một cột (~880px), cùng hệ với phiếu FPT: đầu phiếu kiểu bảng giá, hai lăng kính cạnh nhau, rồi đi sâu theo 8 bước của skill */
+:root{
+  --paper:#F4F6F9; --card:#FFFFFF; --ink:#141A26; --muted:#586174; --line:#DCE1E9;
+  --ai:#22395E;      /* chàm (藍) – màu nhấn */
+  --ai-soft:#E4EAF4;
+  --up:#0B8A4E; --up-soft:#DDF3E7;   /* xanh = tăng (quy ước VN) */
+  --down:#C4362C; --down-soft:#F8E1DE; /* đỏ = giảm */
+  --warn:#9A6200; --warn-soft:#FBEED3;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-data:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+    --ai:#93B3EA; --ai-soft:#1D2A42;
+    --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+    --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E121A; --card:#151B26; --ink:#E6E9EF; --muted:#9AA3B5; --line:#2A3243;
+  --ai:#93B3EA; --ai-soft:#1D2A42;
+  --up:#3BC27D; --up-soft:#123326; --down:#F0665C; --down-soft:#3A1A18;
+  --warn:#E3AA3C; --warn-soft:#3A2C10; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.62}
+.wrap{max-width:880px;margin:0 auto;padding-block:28px 64px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(26px,4.4vw,36px);font-weight:700}
+h2{font-size:clamp(21px,3.2vw,26px);font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0;max-width:68ch}
+a{color:var(--ai)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ai);outline-offset:2px;border-radius:4px}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+section{display:flex;flex-direction:column;gap:16px}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+/* ---- Đầu phiếu ---- */
+.masthead{display:flex;flex-direction:column;gap:18px;border-bottom:2px solid var(--ink);padding-bottom:22px}
+.tickerrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 28px}
+.ticker{display:flex;align-items:baseline;gap:12px}
+.ticker .sym{font-family:var(--f-data);font-weight:600;font-size:15px;background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:3px;letter-spacing:.06em}
+.px{font-family:var(--f-data);font-size:clamp(30px,6vw,42px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.chg{font-family:var(--f-data);color:var(--up);font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 22px;margin:0}
+@media (max-width:520px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.facts div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.facts dt{font-size:12px;color:var(--muted)}
+.facts dd{margin:0;font-family:var(--f-data);font-variant-numeric:tabular-nums;font-weight:600;font-size:15px}
+
+/* ---- Hai lăng kính ---- */
+.lenses{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.lenses{grid-template-columns:1fr}}
+.lens{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.verdict{align-self:flex-start;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.v-up{background:var(--up-soft);color:var(--up)}
+.v-warn{background:var(--warn-soft);color:var(--warn)}
+.v-down{background:var(--down-soft);color:var(--down)}
+.lens ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.bottomline{border-left:3px solid var(--ai);padding:4px 0 4px 16px}
+.bottomline p{font-size:16.5px}
+
+/* ---- Bảng ---- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.r,th.r{text-align:right}
+td.num{white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* ---- Biểu đồ ---- */
+.figure{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.figure svg{width:100%;height:auto;display:block}
+.chart-txt{fill:var(--muted);font-family:var(--f-data);font-size:11px}
+.chart-val{fill:var(--ink);font-family:var(--f-data);font-size:11px;font-weight:600}
+.grid-line{stroke:var(--line);stroke-width:1}
+.bar{fill:var(--ai)}
+.bar-last{fill:var(--up)}
+.cap{font-size:12.5px;color:var(--muted)}
+
+/* ---- Máy tính định giá ---- */
+.calc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+@media (max-width:720px){.calc{grid-template-columns:1fr}}
+.calc .inputs{display:flex;flex-direction:column;gap:14px;min-width:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ai);border-color:var(--ai);color:var(--card)}
+.field{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.field label{font-size:13.5px}
+.field output{font-family:var(--f-data);font-variant-numeric:tabular-nums;font-weight:600;font-size:14px}
+.field input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ai)}
+.calc .results{display:flex;flex-direction:column;gap:14px;min-width:0}
+.big{font-family:var(--f-data);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.res-grid div{display:flex;flex-direction:column;gap:2px}
+.res-grid span:first-child{font-size:12px;color:var(--muted)}
+.res-grid span:last-child{font-family:var(--f-data);font-weight:600;font-variant-numeric:tabular-nums}
+.meter{position:relative;height:10px;border-radius:999px;background:var(--ai-soft)}
+.meter .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--up)}
+.meter .tick{position:absolute;top:-4px;width:2px;height:18px;background:var(--ink)}
+
+/* ---- Thang giá ---- */
+.ladder-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.svg-scroll{overflow-x:auto}
+.svg-scroll svg{min-width:520px}
+.lvl-res{fill:var(--down)} .lvl-sup{fill:var(--up)} .lvl-now{fill:var(--ai)}
+.lvl-line-res{stroke:var(--down);stroke-width:1.5}
+.lvl-line-sup{stroke:var(--up);stroke-width:1.5}
+.lvl-line-now{stroke:var(--ai);stroke-width:2.5}
+.lvl-line-psy{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.lvl-lbl{fill:var(--ink);font-family:var(--f-body);font-size:11.5px}
+.lvl-px{font-family:var(--f-data);font-size:11.5px;font-weight:600}
+
+/* ---- Nến minh họa ---- */
+.cndl-up{fill:var(--up);stroke:var(--up)}
+.cndl-down{fill:var(--down);stroke:var(--down)}
+.wick{stroke-width:1.5}
+.cndl-ghost{fill:none;stroke:var(--muted);stroke-dasharray:3 3}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:620px){.scen{grid-template-columns:1fr}}
+.scen .figure h3{font-size:15.5px}
+
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.plan{grid-template-columns:1fr}}
+.plan .lens ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+
+.sources{font-size:13px;color:var(--muted)}
+.sources ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.note{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.note b{color:var(--warn)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<style>
+.median-line{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:5 4}
+.median-txt{fill:var(--warn);font-family:var(--f-data);font-size:11px;font-weight:600}
+.bar-ttm{fill:var(--warn)}
+.matrix td,.matrix th{text-align:center}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix .here{background:var(--warn-soft);font-weight:700;outline:2px solid var(--warn);outline-offset:-2px}
+.tag{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <a class="ve-danh-sach" href="../index.html">← Tất cả phiếu</a>
+
+  <header class="masthead">
+    <div class="eyebrow">Phiếu nghiên cứu cổ phiếu · cập nhật 19/10/2026 · lập theo skill phan-tich-co-phieu</div>
+    <h1>DPM giữa chu kỳ urê: rẻ trên lợi nhuận đỉnh, chỉ hợp lý trên lợi nhuận bình thường</h1>
+    <div class="tickerrow">
+      <div class="ticker"><span class="sym">HOSE: DPM</span><span class="muted small">Tổng Công ty Phân bón và Hóa chất Dầu khí (PVFCCo)</span></div>
+      <div class="ticker"><span class="px">21.250</span><span class="muted small">phiên 19/10: 21.200 – 21.350</span></div>
+    </div>
+    <dl class="facts">
+      <div><dt>Vốn hóa (680 triệu cp)</dt><dd>≈ 14.450 tỷ đ</dd></div>
+      <div><dt>P/E 12 tháng (đỉnh chu kỳ)</dt><dd>≈ 8,1 lần</dd></div>
+      <div><dt>P/B (VCSH 30/6/2026)</dt><dd>≈ 1,25 lần</dd></div>
+      <div><dt>Cổ tức tiền năm 2025</dt><dd>1.500 đ ≈ 7,1%</dd></div>
+      <div><dt>Tiền ròng (ước tính)</dt><dd>≈ 4.000 tỷ ≈ 28% vốn hóa</dd></div>
+      <div><dt>So với đỉnh 3/2026</dt><dd class="down">≈ −33%</dd></div>
+    </dl>
+  </header>
+
+  <section aria-labelledby="ketluan">
+    <h2 id="ketluan">Kết luận và hành động</h2>
+    <div class="lenses">
+      <article class="lens">
+        <div class="eyebrow">Lăng kính giá trị · Buffett, điều chỉnh cho doanh nghiệp chu kỳ</div>
+        <span class="verdict v-warn">Giá hợp lý, chưa có biên an toàn</span>
+        <ul>
+          <li>P/E 8,1 trông rẻ, nhưng lợi nhuận 12 tháng (~1.780 tỷ) gấp <b>2,2 lần</b> trung vị 8 năm (793 tỷ). Mua theo P/E thấp ở đỉnh lợi nhuận là cái bẫy kinh điển của cổ phiếu chu kỳ.</li>
+          <li>Định giá theo lợi nhuận giữa chu kỳ cộng tiền ròng cho ba kịch bản: <b class="num">12.900 / 21.300 / 30.100 đ</b>. Bình quân trọng số là <b class="num">21.400 đ</b>, biên an toàn chỉ khoảng 1%.</li>
+          <li>Giá hiện tại ngụ ý lợi nhuận bình thường khoảng <b>1.245 tỷ/năm</b>, đúng bằng kịch bản giá urê ~420 USD/tấn. Thị trường đang định giá vừa phải, không bi quan.</li>
+          <li>Điểm tựa: tiền ròng lớn, cổ tức tiền khoảng 7%/năm. Quyết định 40/2026 có thể buộc PVN mua thêm khoảng 5,4% cổ phần.</li>
+        </ul>
+      </article>
+      <article class="lens">
+        <div class="eyebrow">Lăng kính kỹ thuật · nến Nhật</div>
+        <span class="verdict v-down">Xu hướng giảm, đi ngang sát đáy 52 tuần</span>
+        <ul>
+          <li>Từ đỉnh tháng 3, giá đã giảm khoảng 33% (đã điều chỉnh cổ tức). Từ đầu tháng 8, giá đi ngang trong vùng 21.000–22.200, cách đáy 52 tuần (20.600) khoảng 3%.</li>
+          <li>Tín hiệu trái chiều: Vietstock ngày 13/10 ghi MACD cắt xuống đường tín hiệu; ngày 16/10 ghi giá còn dưới SMA50/SMA100 nhưng đã vượt dải giữa Bollinger.</li>
+          <li>Phiếu này không có giá mở/cao/thấp từng phiên nên <b>không gọi tên mẫu nến</b>. Tín hiệu xác nhận: đóng cửa trên 22.200 với khối lượng ≥ 1,5 lần TB20. Tín hiệu hủy: đóng cửa dưới 20.600.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="bottomline">
+      <p><b>Theo ma trận quyết định:</b> giá hợp lý cộng xu hướng giảm thì <b>không mua mới</b>. Nhà đầu tư giá trị nên chờ vùng <b class="num">17.000 – 18.000 đ</b> (P/B khoảng 1,0, biên an toàn 16–20% theo kịch bản cơ sở). Cũng có thể vào sớm hơn nếu có bằng chứng giá urê giữ trên 450 USD/tấn sang năm 2027. Người đang nắm giữ có thể giữ để nhận cổ tức; nên giảm tỷ trọng nếu giá đóng cửa dưới 20.600 với khối lượng lớn.</p>
+    </div>
+    <p class="small muted">Mức độ tin cậy: <b>trung bình</b>. Số liệu lấy từ báo chí và báo cáo CTCK, chưa có BCTC gốc; lịch sử lợi nhuận thiếu năm 2018; không có dữ liệu giá từng phiên (nguồn bị chặn trong môi trường chạy).</p>
+  </section>
+
+  <section aria-labelledby="vi-sao">
+    <div class="eyebrow">Bối cảnh</div>
+    <h2 id="vi-sao">Vì sao giá giảm 33% khi lợi nhuận tăng gấp đôi</h2>
+    <p>Giá bằng EPS nhân P/E. Tách biến động giá theo cách đó cho thấy toàn bộ mức giảm đến từ P/E, tức kỳ vọng. Thị trường đã nhìn xuyên qua lợi nhuận đỉnh.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Giai đoạn</th><th class="r">Giá</th><th class="r">EPS 12T</th><th class="r">P/E</th><th>Diễn giải</th></tr></thead>
+        <tbody>
+          <tr><td>Đỉnh 3/2026 → 5/8/2026</td><td class="r num down">−30%</td><td class="r num up">+65%</td><td class="r num down">20,0 → 8,5</td><td>Khi eo biển Hormuz bị đóng, giá urê vọt lên khoảng 850 USD/tấn (4/2026). Thị trường trả giá cao từ trước, rồi hạ P/E ngay khi lợi nhuận đỉnh xuất hiện.</td></tr>
+          <tr><td>5/8 → 19/10/2026</td><td class="r num down">−4%</td><td class="r num">0%</td><td class="r num down">8,5 → 8,1</td><td>Giá urê Trung Đông về khoảng 390–400 USD/tấn. Vietcap (7/9) hạ giả định urê năm 2026 xuống 500 USD và 420 USD cho giai đoạn 2027–2030.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Giá đỉnh 34.000 đ được nhân hệ số khoảng 0,935 để tính cổ tức tiền 1.500 đ chốt tháng 7/2026, thành khoảng 31.800 đ. EPS tính trên 680 triệu cổ phiếu sau đợt thưởng 73,75% (chốt 08/08/2025). Kết quả từ <code>dinh_gia.py</code>.</p>
+    <div class="note"><b>Một tin dễ hiểu nhầm:</b> nhiều báo đưa tin "DPM trích lập 588 tỷ dự phòng trong quý 2". Thực tế 588,9 tỷ là <b>số dư dự phòng lũy kế</b> cho các khoản nợ cũ: VNPOLY (Xơ sợi Đình Vũ) khoảng 480 tỷ và PVTSC khoảng 110 tỷ. Số dư này chỉ tăng khoảng 12% so với đầu năm. Các khoản nợ đã gần như trích đủ, nên rủi ro lỗ thêm từ đây nhỏ.</div>
+  </section>
+
+  <section aria-labelledby="dn">
+    <div class="eyebrow">Doanh nghiệp</div>
+    <h2 id="dn">DPM kiếm tiền từ chênh lệch giá urê và giá khí</h2>
+    <p>DPM vận hành nhà máy Đạm Phú Mỹ (urê từ khí tự nhiên), NPK Phú Mỹ và các dòng hóa chất (NH3, UFC85), đồng thời kinh doanh phân bón nhập khẩu qua mạng lưới phân phối toàn quốc. Tháng 12/2025, DPM ra mắt DAP Phú Mỹ, sản lượng thử khoảng 30.000 tấn. Lợi nhuận phụ thuộc chủ yếu vào chênh lệch giữa giá urê (theo thế giới) và giá khí đầu vào. Từ 1/7/2025, phân bón chịu thuế VAT 5% nên VAT đầu vào được khấu trừ. Đây là cải thiện mang tính cấu trúc cho chi phí.</p>
+    <p>6 tháng 2026 (BCTC soát xét): doanh thu <span class="num">12.609</span> tỷ (+33,8%), LNTT <span class="num">1.631</span> tỷ (+116%, bằng 192% kế hoạch năm), LNST <span class="num">1.326</span> tỷ (+112,5%). Sản lượng kinh doanh phân bón đạt 906.600 tấn; NPK đạt 144.200 tấn, vượt kế hoạch 45%. Giá khí bình quân cao hơn kế hoạch khoảng 16%.</p>
+    <h3>Các điều phải đúng để đầu tư có lãi</h3>
+    <ol class="stack" style="padding-left:20px;margin:0">
+      <li>Giá urê bình quân ≥ khoảng 420 USD/tấn trong 2027–2028.</li>
+      <li>Giá khí đầu vào không tăng đột biến khi các mỏ cũ suy giảm và phải dùng nguồn khí mới đắt hơn.</li>
+      <li>NPK và DAP tiếp tục tăng tỷ trọng, giúp lợi nhuận bớt phụ thuộc giá urê.</li>
+      <li>Cổ tức tiền duy trì ≥ 12–15% mệnh giá mỗi năm.</li>
+      <li>Không phát sinh thêm tổn thất từ các khoản đầu tư, bảo lãnh cũ trong hệ thống dầu khí.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="buffett">
+    <div class="eyebrow">Chất lượng · 12 nguyên tắc Buffett</div>
+    <h2 id="buffett">Một doanh nghiệp lành mạnh, nhưng không phải "cổ phiếu Buffett"</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nhóm</th><th>Nguyên tắc</th><th>Bằng chứng</th><th>Đánh giá</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3">Doanh nghiệp</td><td>Đơn giản, dễ hiểu</td><td>Mô hình dễ hiểu (khí → urê), nhưng giá urê thế giới không dự báo được</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Lịch sử ổn định</td><td>Không lỗ năm nào trong 2017–2025, nhưng lợi nhuận dao động từ 378 đến 5.584 tỷ</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Con hào</td><td>Quy mô lớn, thương hiệu Đạm Phú Mỹ, mạng phân phối, nguồn khí từ PVN. Sản phẩm là hàng hóa đồng nhất nên giá do thế giới quyết định</td><td><span class="pill v-warn">Hẹp</span></td></tr>
+          <tr><td rowspan="3">Ban lãnh đạo</td><td>Phân bổ vốn</td><td>Trả cổ tức tiền cao và đều (15% cho cả năm 2024 và 2025), mở rộng NPK/DAP. Còn tồn đọng khoảng 590 tỷ nợ khó đòi từ các dự án cũ trong hệ thống dầu khí</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Thẳng thắn</td><td>Công bố đầy đủ, nhưng kế hoạch lợi nhuận luôn đặt rất thấp (2026: LNTT 850 tỷ, đã đạt 192% sau 6 tháng), nên kế hoạch không giúp dự báo</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>Không chạy theo đám đông</td><td>Bám lõi phân bón – hóa chất; mở rộng trên dây chuyền sẵn có</td><td><span class="pill v-up">Đạt</span></td></tr>
+          <tr><td rowspan="4">Tài chính</td><td>ROE cao, không nhờ nợ</td><td>ROE 2025 khoảng 9,5%, giữa chu kỳ khoảng 10–11%; ROE bị tiền gửi lớn kéo xuống. Nợ vay khoảng 4.200 tỷ, nhỏ hơn tiền gửi 9.003 tỷ (31/12/2025)</td><td><span class="pill v-down">Không đạt</span></td></tr>
+          <tr><td>Lợi nhuận chủ sở hữu (FCF)</td><td>Chưa có LCTT 2025 trong nguồn đã dùng</td><td><span class="pill">Thiếu dữ liệu</span></td></tr>
+          <tr><td>Biên lợi nhuận</td><td>Biên ròng 2025 khoảng 6,6%; 6 tháng 2026 khoảng 10,5%; dao động theo chu kỳ</td><td><span class="pill v-warn">Một phần</span></td></tr>
+          <tr><td>1 đồng giữ lại</td><td>DPM chi trả phần lớn lợi nhuận; chưa có vốn hóa đầu kỳ đáng tin để kiểm định</td><td><span class="pill">Thiếu dữ liệu</span></td></tr>
+          <tr><td rowspan="2">Thị trường</td><td>Giá trị nội tại</td><td>12.900 – 30.100 đ, bình quân trọng số 21.400 đ (giữa chu kỳ + tiền ròng)</td><td><span class="pill v-warn">≈ giá hiện tại</span></td></tr>
+          <tr><td>Biên an toàn</td><td>Khoảng 1%. Skill yêu cầu 40–50% với doanh nghiệp chu kỳ, hoặc mua quanh P/B 1,0 khi lợi nhuận đang thấp</td><td><span class="pill v-down">Không đạt</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Tổng: 1 đạt, 6 một phần, 2 không đạt, 2 thiếu dữ liệu. Cách kiếm tiền phù hợp với DPM là mua gần đáy chu kỳ (P/B ≤ 1, lợi nhuận thấp, như 2023–2024) và giảm tỷ trọng khi P/E thấp ở đỉnh lợi nhuận. Nắm giữ dài hạn như một doanh nghiệp tăng trưởng không phải cách phù hợp.</p>
+
+    <div class="figure">
+      <h3>LNST công ty mẹ qua chu kỳ (tỷ đồng)</h3>
+      <svg id="npatChart" viewBox="0 0 640 280" role="img" aria-label="Lợi nhuận DPM 2017 đến 2025 và 12 tháng gần nhất, so với trung vị 793 tỷ"></svg>
+      <div class="cap">Đường đứt nét: trung vị 8 năm (793 tỷ). Cột cam: 12 tháng gần nhất (ước tính). 2018 thiếu số cả năm nên bỏ trống; 2019 suy ra từ mức tăng 83% của 2020; 2017 và 2021–2025 dùng LNST hợp nhất làm xấp xỉ. Nguồn: thông cáo KQKD qua VnExpress, CafeF, Vietstock, ABS.</div>
+    </div>
+  </section>
+
+  <section aria-labelledby="dinhgia">
+    <div class="eyebrow">Định giá doanh nghiệp chu kỳ</div>
+    <h2 id="dinhgia">Lợi nhuận giữa chu kỳ × P/E + tiền ròng</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Kịch bản</th><th>Giả định</th><th class="r">LN giữa chu kỳ</th><th class="r">P/E</th><th class="r">Giá trị/cp</th><th class="r">Biên an toàn</th></tr></thead>
+        <tbody>
+          <tr><td>Bi quan (25%)</td><td>Urê 350–380 USD/tấn, Trung Quốc xuất khẩu mạnh, giá khí tăng</td><td class="r num">800 tỷ</td><td class="r num">8</td><td class="r num">12.942</td><td class="r num down">−64%</td></tr>
+          <tr><td>Cơ sở (50%)</td><td>Urê ~420 USD/tấn, hưởng đủ VAT 5%, NPK/DAP tăng</td><td class="r num">1.250 tỷ</td><td class="r num">10</td><td class="r num">21.324</td><td class="r num">0%</td></tr>
+          <tr><td>Lạc quan (25%)</td><td>Urê ~480–500 USD/tấn do Trung Đông, Trung Quốc hạn chế xuất khẩu</td><td class="r num">1.700 tỷ</td><td class="r num">11</td><td class="r num">30.148</td><td class="r num up">+30%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Trước khi nhân P/E, trừ thu nhập tài chính ròng sau thuế khoảng 200 tỷ/năm khỏi lợi nhuận để không tính hai lần lãi tiền gửi; sau đó cộng tiền ròng khoảng 4.000 tỷ. Cách định giá P/B theo ROE giữa chu kỳ (10,8%, chiết khấu 12%, tăng trưởng 3%) cho P/B hợp lý 0,87, tức khoảng 14.800 đ. Cách này khắt khe hơn vì tiền gửi lớn kéo ROE xuống.</p>
+
+    <h3>Tự thử giả định</h3>
+    <div class="calc">
+      <div class="inputs">
+        <div class="seg" role="group" aria-label="Chọn kịch bản">
+          <button type="button" id="sc-bear" data-sc="bear" aria-pressed="false">Bi quan</button>
+          <button type="button" id="sc-base" data-sc="base" aria-pressed="true">Cơ sở</button>
+          <button type="button" id="sc-bull" data-sc="bull" aria-pressed="false">Lạc quan</button>
+        </div>
+        <div class="field"><label for="ln">LN giữa chu kỳ (tỷ đ/năm)</label><output id="lno" for="ln"></output><input id="ln" type="range" min="400" max="3000" step="50" value="1250"></div>
+        <div class="field"><label for="pe">P/E cho phần hoạt động</label><output id="peo" for="pe"></output><input id="pe" type="range" min="5" max="15" step="0.5" value="10"></div>
+        <div class="field"><label for="cash">Tiền ròng (tỷ đ)</label><output id="casho" for="cash"></output><input id="cash" type="range" min="0" max="6000" step="250" value="4000"></div>
+        <div class="field"><label for="fin">Thu nhập tài chính ròng sau thuế (tỷ đ/năm)</label><output id="fino" for="fin"></output><input id="fin" type="range" min="0" max="500" step="25" value="200"></div>
+        <div class="field"><label for="mos">Biên an toàn mong muốn</label><output id="moso" for="mos"></output><input id="mos" type="range" min="10" max="50" step="5" value="20"></div>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="stack" style="gap:4px">
+          <span class="eyebrow">Giá trị / cổ phiếu</span>
+          <span class="big" id="ivOut">—</span>
+          <span class="small" id="mosOut">—</span>
+        </div>
+        <div class="stack" style="gap:6px">
+          <div class="meter" aria-hidden="true"><div class="fill" id="meterFill"></div><div class="tick" id="meterTick"></div></div>
+          <span class="small muted">Thanh xanh: giá trị. Vạch đen: giá hiện tại 21.250 đ.</span>
+        </div>
+        <div class="res-grid">
+          <div><span>Giá mua tối đa</span><span id="buyOut">—</span></div>
+          <div><span>P/E trên LN giữa chu kỳ</span><span id="peMid">—</span></div>
+          <div><span>Số cổ phiếu</span><span class="num">679,97 triệu</span></div>
+          <div><span>Vốn hóa</span><span class="num">14.449 tỷ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>CTCK</th><th>Ngày</th><th>Khuyến nghị</th><th class="r">Giá mục tiêu</th></tr></thead>
+        <tbody>
+          <tr><td>HSC</td><td class="num">03/08/2026</td><td>Mua</td><td class="r num">32.400</td></tr>
+          <tr><td>ACBS</td><td class="num">05/08/2026</td><td>Mua</td><td class="r num">30.900</td></tr>
+          <tr><td>Vietcap</td><td class="num">31/07/2026</td><td>Phù hợp thị trường</td><td class="r num">28.000</td></tr>
+          <tr><td>VNDIRECT</td><td class="num">27/08/2026</td><td>Khả quan</td><td class="r num">26.100</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Các giá mục tiêu này được lập khi nhiều CTCK còn giả định urê năm 2026 trên 500 USD/tấn (ACBS). Giá urê đã về khoảng 400 USD, nên các mức này nhiều khả năng sẽ bị hạ. Chỉ nên dùng làm tham khảo.</p>
+  </section>
+
+  <section aria-labelledby="dongtien">
+    <div class="eyebrow">Dòng tiền và sự kiện</div>
+    <h2 id="dongtien">Chất xúc tác: PVN có thể phải mua thêm</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tbody>
+          <tr><td><b>Quyết định 40/2026/QĐ-TTg (5/8/2026)</b></td><td>Nhà nước phải nắm ≥ 65% vốn trong ngành phân bón giai đoạn 2026–2030. PVN đang nắm 59,59% DPM, nên có thể phải mua thêm khoảng 5,4% (~36,8 triệu cp, ~780 tỷ đ theo giá hiện tại). Đây mới là <b>khả năng</b>, chưa có phương án hay thời hạn cụ thể.</td></tr>
+          <tr><td><b>Khối ngoại</b></td><td>Phiên 6/4/2026 giá giảm mạnh dù khối ngoại mua ròng (Vietstock). Phiếu này chưa có tỷ lệ sở hữu nước ngoài hiện tại; cần bổ sung.</td></tr>
+          <tr><td><b>Lịch cần theo dõi</b></td><td>BCTC quý 3/2026 (cuối tháng 10). Quý 3 là mùa thấp điểm và urê đã giảm, nên lợi nhuận nhiều khả năng thấp hơn mức 915 tỷ của quý 2. Ngoài ra: vụ Đông Xuân (quý 4 và quý 1), các đợt thầu urê của Ấn Độ, hạn ngạch xuất khẩu của Trung Quốc, công thức giá khí mới, ĐHĐCĐ 2027 (cổ tức năm 2026).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="kythuat">
+    <div class="eyebrow">Kỹ thuật · nến Nhật</div>
+    <h2 id="kythuat">Thang giá và điều kiện xác nhận</h2>
+    <div class="ladder-grid">
+      <div class="figure">
+        <h3>Hỗ trợ và kháng cự (đ, quy về sau cổ tức 7/2026)</h3>
+        <div class="svg-scroll"><svg id="ladder" viewBox="0 0 640 380" role="img" aria-label="Thang giá DPM từ 16.000 đến 32.500 đồng"></svg></div>
+        <div class="cap">Các mức trước tháng 7/2026 đã nhân hệ số khoảng 0,935 cho cổ tức tiền 1.500 đ. Mức gốc ghi trong bảng. Đỏ: kháng cự; xanh: hỗ trợ; chàm: giá hiện tại.</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Mức</th><th class="r">Giá</th><th>Nguồn / ý nghĩa</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill v-down">K3</span></td><td class="r num">~31.800</td><td>Đỉnh 3/2026 (34.000 trước điều chỉnh)</td></tr>
+            <tr><td><span class="pill v-down">K2</span></td><td class="r num">26.800 – 29.000</td><td>Vùng tích lũy cuối 3/2026 (28.700 – 31.000 trước điều chỉnh)</td></tr>
+            <tr><td><span class="pill v-down">K1</span></td><td class="r num">~23.400</td><td>Vùng đầu 6/2026 (~25.000 trước điều chỉnh, VCBS)</td></tr>
+            <tr><td><span class="pill v-down">K0</span></td><td class="r num">22.200</td><td>Giá tham chiếu 5/8 (ACBS), đỉnh vùng đi ngang: ngưỡng xác nhận</td></tr>
+            <tr><td><span class="pill v-up">H1</span></td><td class="r num">20.600</td><td>Đáy 52 tuần (Investing): ngưỡng hủy</td></tr>
+            <tr><td><span class="pill v-up">H2</span></td><td class="r num">~17.000</td><td>Giá trị sổ sách/cp (P/B 1,0): vùng giá trị</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="matrix">
+        <thead><tr><th>Ma trận quyết định</th><th>Xác nhận tăng</th><th>Đảo chiều sớm</th><th>Đi ngang</th><th>Giảm</th></tr></thead>
+        <tbody>
+          <tr><td>Rẻ (biên an toàn ≥ 25–30%)</td><td>Mua 2–3 đợt</td><td>Mua 1/3</td><td>Mua dần</td><td>Tối đa 1/3</td></tr>
+          <tr><td><b>Hợp lý (0–25%)</b></td><td>Mua nhỏ</td><td>Thăm dò nhỏ</td><td>Giữ</td><td class="here">Không mua mới · DPM ở đây</td></tr>
+          <tr><td>Đắt (&lt; 0%)</td><td>Không mua mới</td><td>Không mua</td><td>Chốt lời dần</td><td>Bán</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="kehoach">
+    <div class="eyebrow">Hành động</div>
+    <h2 id="kehoach">Kế hoạch theo từng kiểu nhà đầu tư</h2>
+    <div class="plan">
+      <article class="lens">
+        <h3>Đầu tư giá trị và cổ tức</h3>
+        <ol>
+          <li><b>Chưa mua ở 21.250 đ:</b> biên an toàn khoảng 1% là quá mỏng với một doanh nghiệp chu kỳ.</li>
+          <li><b>Vùng mua:</b> 17.000 – 18.000 đ (P/B khoảng 1,0, biên an toàn 16–20%), chia 2–3 đợt. Tỷ suất cổ tức ở vùng này khoảng 8–9% nếu giữ 1.500 đ/cp.</li>
+          <li><b>Mua sớm hơn khi:</b> giá urê Trung Đông giữ trên 450 USD/tấn qua vụ Đông Xuân, hoặc PVN công bố phương án mua thêm theo Quyết định 40.</li>
+          <li><b>Đang nắm giữ:</b> có thể giữ để nhận cổ tức. Giảm tỷ trọng nếu đóng cửa dưới 20.600 với khối lượng lớn, hoặc khi điều phải đúng số 1–2 bị phá vỡ.</li>
+        </ol>
+      </article>
+      <article class="lens">
+        <h3>Giao dịch theo kỹ thuật</h3>
+        <ol>
+          <li><b>Đứng ngoài</b> khi giá còn trong vùng 21.000 – 22.200 đ.</li>
+          <li><b>Điểm mua:</b> sau phiên đóng cửa trên 22.200 đ với khối lượng ≥ 1,5 lần TB20.</li>
+          <li><b>Cắt lỗ:</b> khi đóng cửa dưới 20.500 đ (khoảng −8% từ điểm mua 22.300 đ). Cổ phiếu về tài khoản chiều T+2 nên không cắt được ngay.</li>
+          <li><b>Mục tiêu:</b> 23.400 đ cho tỷ lệ lời/lỗ chỉ khoảng 0,6, không đáng rủi ro. Chỉ vào lệnh nếu nhắm tới 26.800 đ (tỷ lệ khoảng 2,5).</li>
+        </ol>
+      </article>
+    </div>
+
+    <h3>Chỉ số theo dõi</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Chỉ số</th><th>Hiện tại</th><th>Ngưỡng cảnh báo / tích cực</th></tr></thead>
+        <tbody>
+          <tr><td>Giá urê Trung Đông (FOB)</td><td class="num">~390–400 USD/tấn</td><td>Dưới 380: nghiêng về bi quan · trên 450: nghiêng về lạc quan</td></tr>
+          <tr><td>Giá khí đầu vào Phú Mỹ</td><td>6T/2026 cao hơn kế hoạch ~16%</td><td>Tăng tiếp trên 10%/năm</td></tr>
+          <tr><td>LNST quý</td><td class="num">Q2/2026: 915 tỷ</td><td>Dưới ~250 tỷ/quý trong mùa cao điểm</td></tr>
+          <tr><td>Sản lượng NPK</td><td class="num">144.200 tấn (6T)</td><td>Tăng trưởng âm 2 quý liền</td></tr>
+          <tr><td>Tiền ròng</td><td class="num">~4.000 tỷ</td><td>Giảm mạnh mà không có dự án rõ ràng</td></tr>
+          <tr><td>Sở hữu PVN</td><td class="num">59,59%</td><td>Công bố mua thêm: tích cực</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tiền kiểm thất bại</h3>
+    <p>Nếu một năm nữa khoản mua ở 21.250 đ lỗ 30%, nguyên nhân dễ xảy ra nhất là: (1) Trung Quốc nới xuất khẩu khiến urê về 330–350 USD/tấn; (2) giá khí mới đắt hơn làm lợi nhuận bình thường giảm xuống 600–800 tỷ; (3) tiền mặt bị dùng cho dự án kém hiệu quả. Dấu hiệu sớm: giá urê FOB, công thức giá khí công bố, kế hoạch đầu tư tại ĐHĐCĐ.</p>
+  </section>
+
+  <section class="sources" aria-labelledby="nguon">
+    <h3 id="nguon" style="color:var(--ink)">Nguồn và giới hạn dữ liệu</h3>
+    <p>Phiếu được lập theo quy trình của skill <code>phan-tich-co-phieu</code>; định giá do <code>scripts/dinh_gia.py</code> tính (chế độ doanh nghiệp chu kỳ). <code>lay_gia.py</code> không tải được giá vì môi trường chặn VNDirect, DNSE và VPS, nên phần kỹ thuật chỉ dùng mức giá và nhận định đã công bố, không gọi tên mẫu nến. Lợi nhuận 12 tháng, tiền ròng và VCSH mẹ là ước tính. Còn thiếu: lưu chuyển tiền tệ 2025, lợi nhuận 2018, tỷ lệ sở hữu nước ngoài. Phiếu này không phải khuyến nghị đầu tư.</p>
+    <ol>
+      <li><a href="https://www.investing.com/equities/petrovietnam-fertilizer-chemical-historical-data" target="_blank" rel="noopener">Investing.com: giá 19/10/2026, biên độ 52 tuần</a>, <a href="https://cafef.vn/du-lieu/hose/dpm-tong-cong-ty-phan-bon-va-hoa-chat-dau-khictcp.chn" target="_blank" rel="noopener">CafeF: vốn hóa</a></li>
+      <li><a href="https://www.tinnhanhchungkhoan.vn/dam-phu-my-dpm-thuc-hien-192-ke-hoach-loi-nhuan-nam-sau-6-thang-post396915.html" target="_blank" rel="noopener">Tin nhanh Chứng khoán: 6 tháng 2026</a>, <a href="https://vietstock.vn/2026/07/dpm-vuot-xa-ke-hoach-kinh-doanh-nua-dau-nam-2026-737-1463196.htm" target="_blank" rel="noopener">Vietstock: nửa đầu 2026</a>, <a href="https://baomoi.com/dam-phu-my-bao-lai-quy-ii-vuot-moc-900-ty-trich-lap-du-phong-588-ty-voi-cac-khoan-phai-thu-ngan-han-kho-doi-c55738989.epi" target="_blank" rel="noopener">Doanh Nhân: quý 2 và dự phòng</a></li>
+      <li><a href="https://cafef.vn/loi-nhuan-nam-2025-but-pha-thu-nhap-lanh-dao-dam-phu-my-bien-dong-ra-sao-188260331125735675.chn" target="_blank" rel="noopener">CafeF: KQKD 2025, kế hoạch 2026</a>, <a href="https://www.abs.vn/wp-content/uploads/2026/03/DPM_260327_Note-1.pdf" target="_blank" rel="noopener">ABS: bảng cân đối 31/12/2025</a></li>
+      <li><a href="https://markettimes.vn/ong-lon-dam-phu-my-dpm-boc-hoi-hon-90-loi-nhuan-sau-thue-trong-nam-2023-51008.html" target="_blank" rel="noopener">Markettimes: 2022–2023</a>, <a href="https://vietnamfinance.vn/loi-nhuan-cua-dpm-vuot-23-lan-so-voi-ke-hoach-d45933.html" target="_blank" rel="noopener">VietnamFinance: 2021</a>, <a href="https://tapchicongthuong.vn/chi-tieu-loi-nhuan-cua-pvfcco-dieu-chinh-tang-67-58349.htm" target="_blank" rel="noopener">Công Thương: 2017</a></li>
+      <li><a href="https://vneconomy.vn/dpm-chot-quyen-chia-co-phieu-ty-le-73-7.htm" target="_blank" rel="noopener">VnEconomy: thưởng cổ phiếu 73,7%</a>, <a href="https://mekongasean.vn/dpm-chuan-bi-chia-co-tuc-bang-tien-mat-ty-le-15-57468.html" target="_blank" rel="noopener">Mekong ASEAN: cổ tức 15% (2026)</a></li>
+      <li><a href="https://moneyf.vn/dpm-chot-chia-co-tuc-khung-15-hon-1000-ty-dong-sap-yimzht4j" target="_blank" rel="noopener">MoneyF: đỉnh 34.000 đ, giá 30/3/2026</a>, <a href="https://vn.investing.com/news/stock-market-news/tuan-1923102026-10-co-phieu-nong-duoi-goc-nhin-ptkt-cua-vietstock-2737307" target="_blank" rel="noopener">Vietstock PTKT tuần 19–23/10</a></li>
+      <li><a href="https://acbs.com.vn/acbsmedia/2026/08/DPM_Cap-nhat-nhanh-05.08.2026.pdf" target="_blank" rel="noopener">ACBS 05/08/2026</a>, <a href="https://elibook.vn/2026/09/03/dcm-va-dpm-quy-2-2026-dinh-loi-nhuan-da-lo-dien-nhung-quyet-dinh-40-lai-day-hai-anh-em-dam-dau-khi-vao-hai-nga-re-trai-nguoc/" target="_blank" rel="noopener">Elibook: tổng hợp giá mục tiêu, Quyết định 40</a></li>
+      <li><a href="https://diendandoanhnghiep.vn/ap-luc-cung-cau-ha-nhiet-gia-ure-du-bao-dieu-chinh-trong-giai-doan-2026-2030-10184210.html" target="_blank" rel="noopener">Diễn đàn Doanh nghiệp: Vietcap hạ giả định giá urê</a>, <a href="https://elibook.vn/2026/03/06/nganh-phan-bon-dcm-dpm-xung-dot-trung-dong-kich-ngoi-da-tang-gia-ure-toan-cau.html/" target="_blank" rel="noopener">Elibook: urê và Hormuz 3/2026</a></li>
+      <li><a href="https://www.tinnhanhchungkhoan.vn/quyet-dinh-40-bat-song-nhung-co-phieu-von-nha-nuoc-sap-tai-co-cau-so-huu-post395527.html" target="_blank" rel="noopener">Tin nhanh Chứng khoán: PVN 59,59%, Quyết định 40</a>, <a href="https://vietnambiz.vn/song-thoai-von-nha-nuoc-co-tro-lai-sau-quyet-dinh-40-2026810144954855.htm" target="_blank" rel="noopener">Vietnambiz</a></li>
+      <li><a href="https://www.vndirect.com.vn/cmsupload/beta/DPM_Update_20260115.pdf" target="_blank" rel="noopener">VNDIRECT 15/01/2026: DAP Phú Mỹ</a></li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function(){
+  var SVGNS="http://www.w3.org/2000/svg";
+  function el(tag, attrs, text){ var e=document.createElementNS(SVGNS, tag); for(var k in attrs){ e.setAttribute(k, attrs[k]); } if(text!=null){ e.textContent=text; } return e; }
+  function fmt(n){ return Math.round(n).toLocaleString("vi-VN"); }
+
+  /* Lợi nhuận qua chu kỳ */
+  (function(){
+    var svg=document.getElementById("npatChart");
+    var lab=["2017","2018","2019","2020","2021","2022","2023","2024","2025","12T*"];
+    var val=[895,null,378,691,3172,5584,543,554,1080,1780];
+    var L=44,R=10,T=22,B=34,W=640,H=280,max=6000,med=793;
+    var ph=H-T-B, pw=W-L-R, step=pw/lab.length, bw=step*0.58;
+    [0,1500,3000,4500,6000].forEach(function(v){
+      var y=T+ph-(v/max)*ph;
+      svg.appendChild(el("line",{x1:L,x2:W-R,y1:y,y2:y,"class":"grid-line"}));
+      svg.appendChild(el("text",{x:L-6,y:y+4,"text-anchor":"end","class":"chart-txt"}, v===0?"0":(v/1000).toLocaleString("vi-VN")+"k"));
+    });
+    lab.forEach(function(t,i){
+      var x=L+i*step+(step-bw)/2;
+      if(val[i]!=null){
+        var h=(val[i]/max)*ph, y=T+ph-h;
+        svg.appendChild(el("rect",{x:x,y:y,width:bw,height:h,rx:2,"class":i===lab.length-1?"bar-ttm":"bar"}));
+        svg.appendChild(el("text",{x:x+bw/2,y:y-6,"text-anchor":"middle","class":"chart-val"}, fmt(val[i])));
+      } else {
+        svg.appendChild(el("text",{x:x+bw/2,y:T+ph-8,"text-anchor":"middle","class":"chart-txt"},"n/a"));
+      }
+      svg.appendChild(el("text",{x:x+bw/2,y:T+ph+18,"text-anchor":"middle","class":"chart-txt"}, t));
+    });
+    var ym=T+ph-(med/max)*ph;
+    svg.appendChild(el("line",{x1:L,x2:W-R,y1:ym,y2:ym,"class":"median-line"}));
+    svg.appendChild(el("text",{x:L+1.5*step,y:ym-6,"text-anchor":"middle","class":"median-txt"},"trung vị 793"));
+  })();
+
+  /* Thang giá */
+  (function(){
+    var svg=document.getElementById("ladder");
+    var lo=15500, hi=33000, T=16, B=16, H=380, W=640, axisX=58, lineEnd=420, pxX=434, lblX=496;
+    function y(p){ return T+(hi-p)/(hi-lo)*(H-T-B); }
+    [16000,20000,24000,28000,32000].forEach(function(p){
+      svg.appendChild(el("line",{x1:axisX,x2:lineEnd,y1:y(p),y2:y(p),"class":"grid-line"}));
+      svg.appendChild(el("text",{x:axisX-8,y:y(p)+4,"text-anchor":"end","class":"chart-txt"}, fmt(p)));
+    });
+    svg.appendChild(el("line",{x1:axisX,x2:axisX,y1:T,y2:H-B,"class":"grid-line"}));
+    var levels=[
+      {p:31800,t:"Đỉnh 3/2026",k:"res"},
+      {p:29000,t:"Vùng cuối 3/2026",k:"res"},
+      {p:26800,t:"Vùng cuối 3/2026",k:"res"},
+      {p:23400,t:"Vùng đầu 6/2026",k:"res"},
+      {p:22200,t:"Xác nhận (5/8)",k:"res"},
+      {p:21250,t:"Hiện tại",k:"now"},
+      {p:20600,t:"Đáy 52 tuần",k:"sup"},
+      {p:16980,t:"P/B = 1,0",k:"psy"}
+    ];
+    var y1=y(26800), y2=y(29000);
+    svg.appendChild(el("rect",{x:axisX+1,y:y2,width:lineEnd-axisX-1,height:y1-y2,style:"fill:var(--down-soft)"}));
+    var ly=levels.map(function(l){ return y(l.p); });
+    for(var pass=0;pass<20;pass++){ for(var i=1;i<ly.length;i++){ var gap=ly[i]-ly[i-1]; if(gap<15){ var d=(15-gap)/2; ly[i-1]-=d; ly[i]+=d; } } }
+    levels.forEach(function(l,i){
+      var yy=y(l.p);
+      var cls=l.k==="res"?"lvl-line-res":l.k==="sup"?"lvl-line-sup":l.k==="now"?"lvl-line-now":"lvl-line-psy";
+      svg.appendChild(el("line",{x1:axisX,x2:lineEnd,y1:yy,y2:yy,"class":cls}));
+      svg.appendChild(el("line",{x1:lineEnd,x2:pxX-3,y1:yy,y2:ly[i],"class":"grid-line"}));
+      var tc=l.k==="res"?"lvl-res":l.k==="sup"?"lvl-sup":l.k==="now"?"lvl-now":"chart-txt";
+      svg.appendChild(el("text",{x:pxX,y:ly[i]+4,"class":"lvl-px "+tc}, fmt(l.p)));
+      svg.appendChild(el("text",{x:lblX,y:ly[i]+4,"class":"lvl-lbl"}, l.t));
+    });
+  })();
+
+  /* Máy tính định giá chu kỳ */
+  var PRICE=21250, SHARES=679.97;
+  var SC={bear:{ln:800,pe:8},base:{ln:1250,pe:10},bull:{ln:1700,pe:11}};
+  var ids=["ln","pe","cash","fin","mos"], inp={};
+  ids.forEach(function(k){ inp[k]=document.getElementById(k); });
+  function pct(v){ return v.toLocaleString("vi-VN",{maximumFractionDigits:1})+"%"; }
+  function calc(){
+    var ln=+inp.ln.value, pe=+inp.pe.value, cash=+inp.cash.value, fin=+inp.fin.value, mos=+inp.mos.value/100;
+    document.getElementById("lno").textContent=fmt(ln)+" tỷ";
+    document.getElementById("peo").textContent=pe.toLocaleString("vi-VN")+" lần";
+    document.getElementById("casho").textContent=fmt(cash)+" tỷ";
+    document.getElementById("fino").textContent=fmt(fin)+" tỷ";
+    document.getElementById("moso").textContent=pct(mos*100);
+    var tong=Math.max(0,ln-fin)*pe+cash, iv=tong*1e9/(SHARES*1e6), m=1-PRICE/iv;
+    document.getElementById("ivOut").textContent=fmt(iv)+" đ";
+    var mo=document.getElementById("mosOut");
+    mo.textContent= m>=0 ? "Giá hiện tại thấp hơn giá trị "+pct(m*100) : "Giá hiện tại cao hơn giá trị "+pct(-m*100);
+    mo.className="small "+(m>=mos?"up":(m>=0?"":"down"));
+    document.getElementById("buyOut").textContent=fmt(iv*(1-mos))+" đ";
+    document.getElementById("peMid").textContent=(PRICE*SHARES/1000/ln).toLocaleString("vi-VN",{maximumFractionDigits:1})+" lần";
+    var scale=Math.max(iv,PRICE)*1.1;
+    document.getElementById("meterFill").style.width=(iv/scale*100)+"%";
+    document.getElementById("meterTick").style.left="calc("+(PRICE/scale*100)+"% - 1px)";
+  }
+  function setScenario(name){
+    inp.ln.value=SC[name].ln; inp.pe.value=SC[name].pe;
+    document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.sc===name?"true":"false"); });
+    calc();
+  }
+  document.querySelectorAll(".seg button").forEach(function(b){ b.addEventListener("click",function(){ setScenario(b.dataset.sc); }); });
+  ids.forEach(function(k){ inp[k].addEventListener("input",function(){
+    if(k==="ln"||k==="pe"){ document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed","false"); }); }
+    calc();
+  }); });
+  calc();
+})();
+</script>
+
+</body>
+</html>
